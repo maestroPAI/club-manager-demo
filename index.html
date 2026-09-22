@@ -1,0 +1,2828 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sports Community Management System - Live Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0D2818; --bg-deeper:#081A10; --panel:#122E1E;
+    --turf:#1F4D31; --turf-light:#2C6B44;
+    --chalk:#F3EFE4; --chalk-dim:rgba(243,239,228,0.62); --chalk-faint:rgba(243,239,228,0.12);
+    --floodlight:#FFC24B; --floodlight-dim:rgba(255,194,75,0.15);
+    --signal:#FF6B4A; --signal-dim:rgba(255,107,74,0.16);
+    --ok:#7FD99A; --ok-dim:rgba(127,217,154,0.15);
+    --line:rgba(243,239,228,0.1);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg-deeper);
+    color:var(--chalk); font-family:'Manrope',sans-serif; min-height:100vh;
+  }
+  .stadium-backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;background:
+    radial-gradient(circle at 20% 15%, rgba(59,224,146,0.18) 0%, rgba(59,224,146,0) 45%),
+    radial-gradient(circle at 85% 75%, rgba(59,224,146,0.12) 0%, rgba(59,224,146,0) 50%),
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 64px),
+    linear-gradient(160deg, #06140d 0%, #0a1f14 45%, #04100a 100%);
+  }
+  .backdrop-overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(to bottom, rgba(3,10,6,0.4) 0%, rgba(4,14,9,0.55) 25%, rgba(6,20,13,0.75) 50%, rgba(8,26,17,0.92) 75%, var(--bg-deeper) 100%);
+  }
+  .wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:22px 18px 60px;}
+  .navbar{
+    display:flex;align-items:center;gap:14px;
+    background:rgba(8,26,17,0.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--line);border-radius:16px;
+    padding:10px 14px;margin:-4px 0 16px;position:sticky;top:10px;z-index:6;
+    flex-wrap:nowrap;
+  }
+  .brand-logo{height:30px;width:auto;flex-shrink:0;}
+  .brand-logo-svg{height:32px;width:auto;flex-shrink:0;}
+  .nav-links{display:flex;align-items:center;gap:4px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;white-space:nowrap;}
+  .nav-links::-webkit-scrollbar{display:none;}
+  @media (max-width:600px){
+    .navbar{gap:8px;padding:8px 10px;}
+    .brand-logo-svg{height:26px;}
+    .role-btn.nav-link{padding:8px 9px;font-size:11.5px;}
+    .role-btn.nav-cta{padding:8px 13px;font-size:11.5px;}
+  }
+  .role-btn.nav-link{background:none;padding:8px 12px;border-radius:8px;font-size:12.5px;}
+  .role-btn.nav-link.active{background:none;color:var(--floodlight);position:relative;}
+  .role-btn.nav-link.active::after{
+    content:'';position:absolute;bottom:0;right:12px;left:12px;height:2px;background:var(--floodlight);border-radius:2px;
+  }
+  .role-btn.nav-link:hover{color:var(--chalk);}
+  .role-btn.nav-cta{
+    background:var(--floodlight);color:var(--bg-deeper);padding:9px 20px;border-radius:999px;
+    font-size:12.5px;flex-shrink:0;
+  }
+  .role-btn.nav-cta.active{background:var(--floodlight);color:var(--bg-deeper);}
+  .role-toggle{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;}
+  .role-btn{background:none;border:none;color:var(--chalk-dim);font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;padding:9px 16px;border-radius:9px;cursor:pointer;}
+  .role-btn.active{background:var(--floodlight);color:var(--bg-deeper);}
+
+  .disclaimer{
+    background:linear-gradient(rgba(15,40,26,0.9), rgba(15,40,26,0.9)), var(--signal-dim);
+    border:1px solid rgba(255,107,74,0.3);border-radius:12px;
+    padding:11px 14px;font-size:12px;color:var(--chalk-dim);margin:16px 0 22px;line-height:1.6;
+  }
+  .disclaimer b{color:var(--signal);}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .panel{background:rgba(15,40,26,0.93);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;}
+  .panel-title{font-size:14.5px;font-weight:700;margin:0 0 14px;display:flex;align-items:center;justify-content:space-between;}
+  .section-title{font-family:'Oswald',sans-serif;font-size:20px;margin:22px 0 12px;text-shadow:0 2px 8px rgba(0,0,0,0.6);}
+  .greeting-big{font-family:'Oswald',sans-serif;font-size:24px;margin:0;text-shadow:0 2px 8px rgba(0,0,0,0.6);}
+
+  .user-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .user-pill{
+    background:var(--panel);border:1px solid var(--line);color:var(--chalk-dim);
+    font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:999px;cursor:pointer;
+  }
+  .user-pill.active{background:var(--turf-light);color:var(--chalk);border-color:transparent;}
+
+  .plan-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .plan-name{font-family:'Oswald',sans-serif;font-size:18px;color:var(--floodlight);}
+  .credit-row{display:flex;gap:8px;margin:8px 0 6px;}
+  .credit-box{flex:1;height:40px;border-radius:10px;background:var(--chalk-faint);display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .credit-box.used{background:var(--floodlight);color:var(--bg-deeper);}
+  .credit-note{font-size:11.5px;color:var(--chalk-dim);}
+
+  .game-card{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);}
+  .game-card:last-child{border-bottom:none;}
+  .game-when{flex:0 0 62px;text-align:center;}
+  .game-when .d{font-family:'Oswald',sans-serif;font-size:15px;display:block;}
+  .game-when .t{font-size:11px;color:var(--chalk-dim);}
+  .game-info{flex:1;min-width:0;}
+  .game-info .g-title{font-size:13.5px;font-weight:700;margin:0 0 3px;}
+  .game-info .g-meta{font-size:11.5px;color:var(--chalk-dim);margin:0;}
+  .fill-pill{font-size:11px;font-weight:700;padding:5px 9px;border-radius:8px;flex-shrink:0;}
+  .fill-ok{background:var(--ok-dim);color:var(--ok);}
+  .fill-risk{background:var(--floodlight-dim);color:var(--floodlight);}
+  .fill-crit{background:var(--signal-dim);color:var(--signal);}
+  .fill-full{background:var(--chalk-faint);color:var(--chalk-dim);}
+  .action-btn{
+    flex-shrink:0;background:var(--floodlight);color:var(--bg-deeper);border:none;
+    font-family:'Manrope',sans-serif;font-weight:800;font-size:12.5px;padding:9px 14px;border-radius:9px;cursor:pointer;
+  }
+  .action-btn.secondary{background:transparent;color:var(--signal);border:1px solid rgba(255,107,74,0.4);}
+  .action-btn:disabled{background:var(--chalk-faint);color:var(--chalk-dim);cursor:default;}
+
+  .reg-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .reg-row:last-child{border-bottom:none;}
+  .status-tag{font-size:10.5px;font-weight:700;padding:4px 8px;border-radius:7px;flex-shrink:0;}
+  .st-confirmed{background:var(--ok-dim);color:var(--ok);}
+  .st-cancelled_ok{background:var(--chalk-faint);color:var(--chalk-dim);}
+  .st-cancelled_late{background:var(--signal-dim);color:var(--signal);}
+
+  .agent-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:11.5px;color:var(--chalk-dim);}
+  .field input{
+    background:var(--bg-deeper);border:1px solid var(--line);color:var(--chalk);
+    border-radius:9px;padding:9px 12px;font-family:'Manrope',sans-serif;font-size:13px;width:110px;
+  }
+  .run-btn{background:var(--floodlight);color:var(--bg-deeper);border:none;font-weight:800;font-size:13px;padding:11px 18px;border-radius:10px;cursor:pointer;}
+  .run-btn:disabled{opacity:0.5;cursor:default;}
+
+  table{width:100%;border-collapse:collapse;min-width:480px;}
+  .panel:has(table){overflow-x:auto;}
+  th{text-align:left;font-size:11px;color:var(--chalk-dim);font-weight:600;padding:0 8px 10px;border-bottom:1px solid var(--line);}
+  td{padding:11px 8px;border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .fill-track{width:80px;height:7px;background:var(--chalk-faint);border-radius:4px;overflow:hidden;display:inline-block;margin-inline-end:8px;vertical-align:middle;}
+  .fill-fill{height:100%;border-radius:4px;}
+
+  .log-item{padding:12px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .log-item:last-child{border-bottom:none;}
+  .log-item .lt{font-size:11px;color:var(--chalk-dim);}
+  .log-item .lm{margin:3px 0 0;color:var(--chalk-dim);}
+  .empty-note{font-size:12.5px;color:var(--chalk-dim);padding:8px 0;}
+
+  .add-game-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+  .add-game-form input{
+    background:var(--bg-deeper);border:1px solid var(--line);color:var(--chalk);
+    border-radius:9px;padding:9px 12px;font-family:'Manrope',sans-serif;font-size:12.5px;width:100%;
+    color-scheme:dark;
+  }
+  @media (max-width:600px){.add-game-form{grid-template-columns:1fr;}}
+
+  .auth-panel{max-width:380px;margin:10px auto 0;text-align:center;}
+  .auth-panel h2{font-family:'Oswald',sans-serif;font-size:20px;margin:0 0 6px;}
+  .auth-panel p.hint{font-size:12px;color:var(--chalk-dim);margin:0 0 18px;line-height:1.6;}
+  .auth-panel input{
+    width:100%;background:var(--bg-deeper);border:1px solid var(--line);color:var(--chalk);
+    border-radius:10px;padding:12px 14px;font-family:'Manrope',sans-serif;font-size:14px;margin-bottom:10px;text-align:center;
+  }
+  .auth-panel .run-btn{width:100%;}
+
+  .venue-hero{width:100%;max-width:280px;height:auto;display:block;margin:0 auto 6px;}
+  .auth-title{font-family:'Oswald',sans-serif;font-size:28px;margin:0 0 6px;text-align:center;text-shadow:0 2px 10px rgba(0,0,0,0.7);}
+  .auth-motto{font-size:12.5px;color:var(--floodlight);text-align:center;margin:0 0 4px;font-weight:700;letter-spacing:0.3px;text-shadow:0 1px 6px rgba(0,0,0,0.7);}
+  .auth-subtitle{font-size:13px;color:var(--chalk-dim);text-align:center;margin:0 0 24px;text-shadow:0 1px 6px rgba(0,0,0,0.7);}
+  .auth-card{background:rgba(15,40,26,0.9);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:18px;padding:22px;text-align:left;}
+  .google-btn{
+    width:100%;background:var(--chalk);color:var(--bg-deeper);border:none;
+    border-radius:10px;padding:12px;font-family:'Manrope',sans-serif;font-weight:800;font-size:14px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  }
+  .google-btn .g-icon{
+    width:20px;height:20px;border-radius:50%;background:#fff;color:#4285F4;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;font-family:Arial,sans-serif;
+  }
+  .auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--chalk-dim);font-size:12px;}
+  .auth-divider::before, .auth-divider::after{content:'';flex:1;height:1px;background:var(--line);}
+  .auth-label{display:block;font-size:12px;color:var(--chalk-dim);margin:0 0 6px;text-align:left;}
+  .auth-label-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;}
+  .auth-link{color:var(--floodlight);font-size:11.5px;text-decoration:none;}
+  .auth-footer{font-size:11.5px;color:var(--chalk-dim);text-align:center;margin-top:16px;line-height:1.6;text-shadow:0 1px 5px rgba(0,0,0,0.8);}
+  .auth-card input{text-align:left;}
+  .method-toggle{display:flex;gap:8px;margin-bottom:16px;}
+  .method-btn{
+    flex:1;background:var(--bg-deeper);border:1px solid var(--line);color:var(--chalk-dim);
+    font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;padding:10px;border-radius:9px;cursor:pointer;
+  }
+  .method-btn.active{background:var(--floodlight);color:var(--bg-deeper);border-color:var(--floodlight);}
+  .demo-phones{font-size:11px;color:var(--chalk-dim);margin-top:14px;line-height:1.9;text-align:left;background:var(--bg-deeper);border-radius:10px;padding:10px 14px;}
+  .identity-bar{display:flex;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 16px;margin-bottom:16px;font-size:12.5px;}
+  .identity-bar b{color:var(--floodlight);}
+  .logout-link{color:var(--signal);font-size:12px;font-weight:700;cursor:pointer;background:none;border:none;}
+
+  .fill-link{background:none;border:none;cursor:pointer;padding:0;font:inherit;text-decoration:underline;text-underline-offset:2px;}
+
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(3,10,6,0.72);
+    align-items:center;justify-content:center;z-index:200;padding:16px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--panel);border:1px solid var(--line);border-radius:18px;
+    padding:22px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;
+  }
+  .modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+  .modal-title{font-family:'Oswald',sans-serif;font-size:19px;margin:0;}
+  .modal-close{background:none;border:none;color:var(--chalk-dim);font-size:20px;cursor:pointer;line-height:1;padding:0;}
+  .modal-meta{font-size:12px;color:var(--chalk-dim);margin:2px 0 16px;}
+  .roster-count{font-size:13px;font-weight:700;margin:0 0 10px;color:var(--floodlight);}
+  .roster-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .roster-row:last-child{border-bottom:none;}
+  .roster-tag{font-size:10.5px;color:var(--floodlight);font-weight:700;}
+
+  .plans-grid{display:flex;flex-direction:column;gap:10px;}
+  .plan-card{background:var(--bg-deeper);border:1px solid var(--line);border-radius:14px;padding:16px;}
+  .plan-card .pc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .plan-card .pc-name{font-family:'Oswald',sans-serif;font-size:16px;}
+  .plan-card .pc-price{font-family:'Oswald',sans-serif;font-size:15px;color:var(--floodlight);}
+  .plan-card .pc-desc{font-size:12px;color:var(--chalk-dim);margin:0 0 12px;}
+  .plan-card .run-btn{width:100%;padding:9px;}
+
+  .pay-row{display:flex;gap:10px;}
+  @media (max-width:420px){.pay-row{flex-direction:column;}}
+  .pay-field{flex:1;margin-bottom:10px;}
+  .pay-field label{display:block;font-size:11.5px;color:var(--chalk-dim);margin-bottom:6px;}
+  .pay-field input, .pay-field select, .pay-field textarea{
+    width:100%;background:var(--bg-deeper);border:1px solid var(--line);color:var(--chalk);
+    border-radius:9px;padding:11px 12px;font-family:'Manrope',sans-serif;font-size:13.5px;
+  }
+  .pay-field textarea{resize:vertical;min-height:70px;}
+
+  .level-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .level-badge{font-family:'Oswald',sans-serif;font-size:19px;color:var(--floodlight);}
+  .xp-count{font-size:12px;color:var(--chalk-dim);}
+  .xp-track-lg{background:var(--chalk-faint);border-radius:7px;height:10px;overflow:hidden;}
+  .xp-fill-lg{height:100%;background:linear-gradient(90deg,var(--floodlight),var(--signal));}
+  .xp-note-lg{font-size:11.5px;color:var(--chalk-dim);margin-top:8px;}
+  .referral-box{background:var(--bg-deeper);border-radius:12px;padding:14px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .referral-code{font-family:'Courier New',monospace;font-size:16px;font-weight:700;color:var(--floodlight);letter-spacing:0.05em;}
+  .referral-copy-btn{background:var(--turf-light);color:var(--chalk);border:none;font-size:12px;font-weight:700;padding:8px 12px;border-radius:8px;cursor:pointer;}
+  .pay-summary{background:var(--bg-deeper);border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+  .pay-summary .ps-name{font-size:13px;font-weight:700;}
+  .pay-summary .ps-price{font-family:'Oswald',sans-serif;font-size:17px;color:var(--floodlight);}
+  .pay-note{font-size:11px;color:var(--chalk-dim);margin:0 0 16px;line-height:1.6;background:var(--signal-dim);border-radius:8px;padding:8px 10px;}
+  .pay-error{font-size:12px;color:var(--signal);margin:-4px 0 10px;display:none;}
+  .pay-error.show{display:block;}
+
+  .lb-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .lb-row:last-child{border-bottom:none;}
+  .lb-rank{font-family:'Oswald',sans-serif;font-size:15px;color:var(--chalk-dim);flex:0 0 20px;text-align:center;}
+  .lb-row.top1 .lb-rank, .lb-row.top1 .lb-name{color:var(--floodlight);}
+  .lb-name{flex:1;}
+  .lb-val{font-family:'Oswald',sans-serif;font-size:15px;}
+  .lb-source{font-size:11px;color:var(--chalk-dim);margin-top:10px;line-height:1.6;}
+
+  .store-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .store-toolbar input{
+    flex:2;min-width:180px;background:rgba(15,40,26,0.9);border:1px solid var(--line);color:var(--chalk);
+    border-radius:10px;padding:11px 14px;font-family:'Manrope',sans-serif;font-size:13px;
+  }
+  .store-toolbar select{
+    flex:1;min-width:150px;background:rgba(15,40,26,0.9);border:1px solid var(--line);color:var(--chalk);
+    border-radius:10px;padding:11px 14px;font-family:'Manrope',sans-serif;font-size:13px;
+  }
+  .filter-row{display:flex;gap:8px;overflow-x:auto;margin-bottom:18px;scrollbar-width:none;}
+  .filter-row::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;padding:8px 16px;border-radius:999px;background:rgba(15,40,26,0.9);
+    font-size:13px;font-weight:600;color:var(--chalk-dim);border:1px solid var(--line);cursor:pointer;white-space:nowrap;
+  }
+  .chip.active{background:var(--floodlight);color:var(--bg-deeper);border-color:var(--floodlight);}
+
+  .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:24px;}
+  .product-card{background:rgba(15,40,26,0.93);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:transform 0.15s;}
+  .product-media{position:relative;height:130px;display:flex;align-items:center;justify-content:center;}
+  .product-emoji{font-size:52px;filter:drop-shadow(0 6px 10px rgba(0,0,0,0.35));}
+  .wishlist-btn{
+    position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;
+    background:rgba(8,26,17,0.55);border:none;color:#fff;font-size:14px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .wishlist-btn.active{color:var(--signal);background:rgba(255,255,255,0.85);}
+  .product-badge{
+    position:absolute;top:10px;left:10px;background:var(--signal);color:#fff;
+    font-size:10px;font-weight:800;padding:4px 9px;border-radius:7px;
+  }
+  .product-body{padding:14px;}
+  .product-name{font-size:13.5px;font-weight:700;margin:0 0 4px;min-height:34px;}
+  .product-price{font-family:'Oswald',sans-serif;font-size:16px;color:var(--floodlight);margin:0 0 12px;}
+  .product-price-alt{font-family:'Manrope',sans-serif;font-size:11px;color:var(--chalk-dim);font-weight:400;}
+  .product-card select{width:100%;background:var(--bg-deeper);border:1px solid var(--line);color:var(--chalk);border-radius:8px;padding:8px;font-size:12.5px;margin-bottom:10px;}
+  .cart-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .cart-row:last-child{border-bottom:none;}
+  .cart-remove{background:none;border:none;color:var(--signal);font-size:12px;cursor:pointer;flex-shrink:0;}
+  .cart-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:14px;margin-top:4px;font-size:14px;font-weight:700;}
+
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  @media (max-width:600px){.row-2{grid-template-columns:1fr;}}
+
+  .admin-layout{display:flex;gap:18px;align-items:flex-start;}
+  .admin-sidebar{
+    width:200px;flex-shrink:0;background:rgba(15,40,26,0.93);border:1px solid var(--line);
+    border-radius:14px;padding:10px;position:sticky;top:75px;
+  }
+  .admin-sidebar-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;
+    font-size:12.5px;color:var(--chalk-dim);margin-bottom:2px;
+  }
+  .admin-sidebar-item .asi-icon{font-size:15px;width:18px;text-align:center;}
+  .admin-sidebar-item:hover{color:var(--chalk);}
+  .admin-sidebar-item.active{background:var(--floodlight);color:var(--bg-deeper);font-weight:700;}
+  .admin-content-area{flex:1;min-width:0;}
+  .admin-section{display:none;}
+  .admin-section.active{display:block;}
+  @media (max-width:800px){
+    .admin-layout{flex-direction:column;}
+    .admin-sidebar{
+      width:100%;position:static;display:flex;overflow-x:auto;gap:6px;padding:8px;
+      scrollbar-width:none;
+    }
+    .admin-sidebar::-webkit-scrollbar{display:none;}
+    .admin-sidebar-item{flex-shrink:0;white-space:nowrap;margin-bottom:0;}
+  }
+
+  .hero-block{text-align:center;padding:40px 16px 32px;}
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:6px;background:rgba(255,194,75,0.12);border:1px solid rgba(255,194,75,0.4);
+    color:var(--floodlight);font-size:12px;font-weight:700;padding:7px 16px;border-radius:999px;margin-bottom:18px;
+  }
+  .hero-title-2{font-family:'Oswald',sans-serif;font-size:32px;line-height:1.35;margin:0 0 14px;text-shadow:0 3px 14px rgba(0,0,0,0.7);max-width:560px;margin-left:auto;margin-right:auto;}
+  @media (max-width:480px){.hero-title-2{font-size:24px;}}
+  .brand-amber{color:var(--floodlight);}
+  .hero-desc{font-size:13.5px;color:var(--chalk-dim);max-width:460px;margin:0 auto 26px;line-height:1.7;text-shadow:0 1px 6px rgba(0,0,0,0.7);}
+  .hero-cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .hero-cta{width:auto;padding:12px 28px;font-size:13.5px;}
+
+  .stat-badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+  @media (max-width:700px){.stat-badge-grid{grid-template-columns:1fr 1fr;}}
+  .stat-badge-card{background:rgba(15,40,26,0.93);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center;}
+  .stat-badge-icon{
+    width:36px;height:36px;border-radius:10px;background:rgba(255,194,75,0.15);color:var(--floodlight);
+    display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 10px;
+  }
+  .stat-badge-val{display:block;font-family:'Oswald',sans-serif;font-size:24px;}
+  .stat-badge-val.small{font-size:13px;font-family:'Manrope',sans-serif;font-weight:700;line-height:1.5;}
+  .stat-badge-label{display:block;font-size:11px;color:var(--chalk-dim);margin-top:2px;}
+
+  .home-games-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+  @media (max-width:900px){.home-games-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:600px){.home-games-grid{grid-template-columns:1fr;}}
+  .hgame-card{background:rgba(15,40,26,0.93);border:1px solid var(--line);border-radius:14px;padding:14px;}
+  .hgame-clickable{cursor:pointer;transition:border-color 0.15s, transform 0.15s;}
+  .hgame-clickable:hover{border-color:var(--floodlight);transform:translateY(-2px);}
+  .hgame-register-banner{
+    margin-top:10px;background:var(--floodlight);color:var(--bg-deeper);text-align:center;
+    font-size:12px;font-weight:800;padding:9px;border-radius:8px;
+  }
+  .hgame-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .hgame-format{background:rgba(255,194,75,0.15);color:var(--floodlight);font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;}
+  .hgame-title{font-size:13.5px;font-weight:700;margin:0 0 4px;}
+  .hgame-meta{font-size:11.5px;color:var(--chalk-dim);margin:0 0 10px;}
+  .hgame-track{height:6px;background:var(--bg-deeper);border-radius:4px;overflow:hidden;margin-bottom:6px;}
+  .hgame-fill{height:100%;background:var(--floodlight);border-radius:4px;}
+  .hgame-count{font-size:11px;color:var(--chalk-dim);}
+
+  .bottom-cta{text-align:center;padding:28px 20px;}
+
+  .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+  @media (max-width:700px){.feature-grid{grid-template-columns:1fr;}}
+  .feature-card{text-align:center;}
+  .feature-icon{font-size:30px;display:block;margin-bottom:8px;}
+  .feature-title{font-family:'Oswald',sans-serif;font-size:15px;margin:0 0 6px;}
+  .feature-text{font-size:12px;color:var(--chalk-dim);line-height:1.6;margin:0;}
+  .terms-sub{font-size:14px;font-weight:800;color:var(--floodlight);margin:16px 0 6px;}
+  .terms-sub:first-child{margin-top:0;}
+  .terms-p{font-size:12.5px;color:var(--chalk-dim);line-height:1.8;margin:0 0 10px;}
+  .terms-note{font-size:11.5px;color:var(--chalk-dim);text-align:center;margin-bottom:16px;line-height:1.6;}
+
+  .stat-tile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-tile{background:var(--bg-deeper);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;}
+  .stat-tile .st-val{display:block;font-family:'Oswald',sans-serif;font-size:22px;color:var(--floodlight);}
+  .stat-tile .st-label{display:block;font-size:11px;color:var(--chalk-dim);margin-top:2px;}
+
+  .stat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .stat-bar-row:last-child{margin-bottom:0;}
+  .stat-bar-row .s-label{flex:0 0 90px;font-size:12px;color:var(--chalk-dim);}
+  .stat-bar-track{flex:1;height:8px;background:var(--bg-deeper);border-radius:5px;overflow:hidden;}
+  .stat-bar-fill{height:100%;background:var(--floodlight);border-radius:5px;}
+  .stat-bar-row .s-val{flex:0 0 32px;text-align:left;font-size:12.5px;font-weight:700;}
+  @media (max-width:700px){.row-2{grid-template-columns:1fr;}}
+  .rev-bar-row{margin-bottom:14px;}
+  .rev-bar-row:last-child{margin-bottom:0;}
+  .rev-bar-label{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;}
+  .rev-bar-label b{font-family:'Oswald',sans-serif;font-weight:400;color:var(--floodlight);}
+  .rev-track{height:10px;background:var(--chalk-faint);border-radius:6px;overflow:hidden;}
+  .rev-fill{height:100%;border-radius:6px;background:var(--floodlight);}
+  .rev-fill.alt{background:var(--turf-light);}
+  .rev-fill.alt2{background:var(--signal);}
+
+  .trend-chart{display:flex;align-items:flex-end;gap:8px;height:120px;padding-top:10px;}
+  .trend-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .trend-bar{width:100%;background:var(--floodlight);border-radius:4px 4px 0 0;min-height:2px;}
+  .trend-label{font-size:10px;color:var(--chalk-dim);margin-top:6px;}
+  .trend-val{font-size:10.5px;color:var(--chalk-dim);margin-bottom:4px;}
+
+  .proposal-card{background:var(--bg-deeper);border:1px solid rgba(255,194,75,0.3);border-radius:14px;padding:16px;margin-bottom:12px;}
+  .proposal-card:last-child{margin-bottom:0;}
+  .proposal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+  .proposal-title{font-size:13.5px;font-weight:700;margin:0;}
+  .proposal-meta{font-size:11.5px;color:var(--chalk-dim);margin:2px 0 0;}
+  .proposal-msg{background:var(--panel);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--chalk-dim);margin:10px 0;line-height:1.6;}
+  .proposal-actions{display:flex;gap:8px;}
+  .candidate-list{max-height:220px;overflow-y:auto;margin-bottom:12px;border:1px solid var(--line);border-radius:10px;padding:4px 10px;}
+  .candidate-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;cursor:pointer;}
+  .candidate-row:last-child{border-bottom:none;}
+  .candidate-name{flex:1;}
+  .candidate-reason{font-size:11px;color:var(--chalk-dim);}
+</style>
+</head>
+<body>
+<div class="stadium-backdrop">
+  <div class="backdrop-overlay"></div>
+</div>
+<div class="wrap">
+
+  <div class="navbar">
+    <span class="brand-logo-svg" style="font-family:'Oswald',sans-serif;font-size:20px;color:var(--floodlight);display:inline-flex;align-items:center;">🏅 Your Club</span>
+    <div class="nav-links">
+      <button class="role-btn nav-link active" data-role="home">Home</button>
+      <button class="role-btn nav-link" data-role="player">My Area</button>
+      <button class="role-btn nav-link" data-role="subscribe">Subscribe</button>
+      <button class="role-btn nav-link" data-role="store">Shop</button>
+      <button class="role-btn nav-link" data-role="events">Business &amp; Events</button>
+      <button class="role-btn nav-link" data-role="past">Past Games</button>
+      <button class="role-btn nav-link" data-role="terms">Terms</button>
+    </div>
+    <button class="role-btn nav-cta" data-role="admin">Admin Area</button>
+    <a href="https://arielshimmer6.gumroad.com/l/jtiei" target="_blank" rel="noopener" class="role-btn nav-cta" style="background:var(--signal);color:#fff;text-decoration:none;display:inline-flex;align-items:center;">Get this platform →</a>
+  </div>
+
+  <div class="disclaimer">
+    <b>What’s real here vs. simulated:</b> Games, registered participants and the top-scorer leaderboard are sample data. Your registrations, subscriptions and credits are actually saved and updated live. Credit card charges and WhatsApp messages are <b>simulated</b> - making these real requires a payment processor account and an approved WhatsApp Business account, as described in the architecture document.
+    <br><br>
+    👀 <b>Like what you see?</b> This whole demo is a self-contained club/gym/studio management platform you can buy and run as your own —
+    <a href="https://arielshimmer6.gumroad.com/l/jtiei" target="_blank" rel="noopener" style="color:var(--floodlight);font-weight:800;">get it here (30% off with code LAUNCH30)</a>.
+  </div>
+
+  <!-- PLAYER VIEW -->
+  <!-- SUBSCRIBE VIEW (public marketing page, not gated by login) -->
+  <div class="view" id="view-subscribe">
+    <div class="hero-block" style="padding-top:20px;">
+      <span class="hero-badge">🏅 Club Membership</span>
+      <h1 class="hero-title-2">Games every week, <span class="brand-amber">without chasing registrations</span></h1>
+      <p class="hero-desc">A fixed monthly game quota, at a better price than paying per game. Pick a plan, register for games every week, and that’s it.</p>
+    </div>
+
+    <div class="row-2" id="subscribe-plans-grid"></div>
+
+    <p class="section-title">What’s included in every plan</p>
+    <div class="feature-grid">
+      <div class="panel feature-card"><span class="feature-icon">📅</span><p class="feature-title">Monthly quota</p><p class="feature-text">Doesn’t roll over - a fresh quota every month.</p></div>
+      <div class="panel feature-card"><span class="feature-icon">⏰</span><p class="feature-title">Flexible cancellation</p><p class="feature-text">Cancel free of charge until 10:00 AM on game day.</p></div>
+      <div class="panel feature-card"><span class="feature-icon">💳</span><p class="feature-title">Automatic billing</p><p class="feature-text">Monthly recurring charge - card, Apple Pay or Google Pay.</p></div>
+    </div>
+
+    <p class="terms-note">Already a member? <a href="javascript:void(0)" onclick="goToRole('player')" style="color:var(--floodlight);">Go to My Area to manage your subscription</a></p>
+  </div>
+
+  <!-- HOME VIEW -->
+  <div class="view active" id="view-home">
+    <div class="hero-block">
+      <span class="hero-badge">🏆 Your local sports community</span>
+      <h1 class="hero-title-2"><span class="brand-amber">Your Club</span> - real activity, every week</h1>
+      <p class="hero-desc">Join a community of amateur players in a professional setup with smart registration, experience points, member perks and up-to-date game stats.</p>
+      <div class="hero-cta-row">
+        <button class="run-btn hero-cta" onclick="goToRole('player')">Go to My Area →</button>
+      </div>
+    </div>
+
+    <p class="section-title">The league in numbers</p>
+    <div class="stat-badge-grid" id="home-stats"></div>
+
+    <p class="section-title">Upcoming games</p>
+    <div class="home-games-grid" id="home-games-teaser"></div>
+
+    <p class="section-title">🤖 Built-in AI attendance agent</p>
+    <div class="panel" style="border-color:rgba(255,194,75,0.35);">
+      <p class="panel-title" style="margin-bottom:8px;">Games under capacity fill themselves back up - automatically.</p>
+      <p class="pay-note" style="background:none;padding:0;margin:0 0 14px;color:var(--chalk-dim);">
+        The agent watches every upcoming game. When one drops below a fill threshold you set, it ranks the regulars
+        most likely to show up - by past attendance and subscription status - and drafts a ready-to-send message.
+        An admin approves with one click; nothing goes out on its own. See it live in
+        <b style="color:var(--floodlight);">Admin Area → Run the agent</b> - there's a real pending proposal waiting for approval right now.
+      </p>
+      <button class="run-btn" onclick="goToRole('admin')">See the agent in Admin →</button>
+    </div>
+
+    <p class="section-title">Top Scorers - real stats</p>
+    <div class="panel" id="leaderboard-panel"></div>
+
+    <div class="panel bottom-cta">
+      <p class="panel-title" style="font-size:18px;">Ready to get in the game?</p>
+      <p class="pay-note" style="margin-bottom:14px;">Go to My Area to register for games, track your experience points, and redeem your perks in the shop.</p>
+      <button class="run-btn" onclick="goToRole('player')">Go to My Area →</button>
+    </div>
+  </div>
+
+  <div class="view" id="view-player">
+    <div id="auth-panel"></div>
+
+    <div id="player-content" style="display:none;">
+      <div class="identity-bar" id="identity-bar"></div>
+
+      <p class="section-title" style="margin-top:0;">My stats</p>
+      <div class="panel" id="progress-panel"></div>
+
+      <div class="panel" id="plan-panel"></div>
+
+      <div class="panel" id="subscribe-panel" style="display:none;"></div>
+
+      <p class="section-title">Upcoming games</p>
+      <div class="panel" id="games-panel"><p class="empty-note">Loading...</p></div>
+
+      <p class="section-title">My registrations</p>
+      <div class="panel" id="my-regs-panel"><p class="empty-note">No registrations yet</p></div>
+    </div>
+  </div>
+
+  <!-- STORE VIEW -->
+  <div class="view" id="view-store">
+    <p class="greeting-big" style="margin-bottom:6px;">Club Shop</p>
+    <p style="color:var(--chalk-dim);font-size:12px;margin-bottom:18px;line-height:1.6;text-shadow:0 1px 5px rgba(0,0,0,0.8);">Sample items only - connect your real catalog and product data here.</p>
+
+    <div class="store-toolbar">
+      <input id="store-search" type="text" placeholder="Search products...">
+      <select id="store-sort">
+        <option value="default">Sort by: Featured</option>
+        <option value="price-asc">Price: low to high</option>
+        <option value="price-desc">Price: high to low</option>
+      </select>
+    </div>
+    <div class="filter-row" id="store-categories"></div>
+
+    <div class="product-grid" id="store-products"></div>
+
+    <p class="section-title">My cart</p>
+    <div class="panel" id="store-cart-panel"></div>
+  </div>
+
+  <!-- EVENTS / B2B VIEW -->
+  <div class="view" id="view-events">
+    <p class="greeting-big" style="margin-bottom:6px;">Business &amp; Events</p>
+    <p style="color:var(--chalk-dim);font-size:13px;margin-bottom:20px;line-height:1.6;text-shadow:0 1px 5px rgba(0,0,0,0.8);">Company tournaments, private parties, adult birthdays - the same professional setup that runs our weekly games.</p>
+
+    <p class="section-title">Company tournaments</p>
+    <div class="plans-grid" style="margin-bottom:8px;">
+      <div class="plan-card"><div class="pc-head"><span class="pc-name">Basic</span><span class="pc-price">$1,800-2,100</span></div><p class="pc-desc">Venue, production, match schedule, staff, trophy and MVP</p></div>
+      <div class="plan-card"><div class="pc-head"><span class="pc-name">Company Cup</span><span class="pc-price">$2,800-3,500</span></div><p class="pc-desc">Basic + photography, highlight reel, company branding, event page</p></div>
+      <div class="plan-card"><div class="pc-head"><span class="pc-name">Premium</span><span class="pc-price">$4,200-5,600+</span></div><p class="pc-desc">Full production, extended branding, upgraded video, jerseys and hosting</p></div>
+    </div>
+
+    <p class="section-title">Private tournament / adult birthday</p>
+    <div class="plans-grid" style="margin-bottom:8px;">
+      <div class="plan-card"><div class="pc-head"><span class="pc-name">Managed game</span><span class="pc-price">$850-1,100</span></div><p class="pc-desc">Venue, management, teams and match schedule</p></div>
+      <div class="plan-card"><div class="pc-head"><span class="pc-name">Private / Birthday Cup</span><span class="pc-price">$1,100-1,700</span></div><p class="pc-desc">+ officials, music, trophy, MVP and basic photography</p></div>
+      <div class="plan-card"><div class="pc-head"><span class="pc-name">Premium</span><span class="pc-price">$1,700-2,300+</span></div><p class="pc-desc">+ jerseys/branding, upgraded photography, highlight reel and hosting</p></div>
+    </div>
+    <p class="lb-source" style="margin-bottom:20px;">Initial price ranges for review, not verified market prices.</p>
+
+    <p class="section-title">Leave your details</p>
+    <div class="panel" id="lead-form-panel"></div>
+  </div>
+
+  <!-- PAST GAMES VIEW -->
+  <div class="view" id="view-past">
+    <p class="greeting-big" style="margin-bottom:6px;">Past Games</p>
+    <p class="terms-note">History of games already played - view only, no registration.</p>
+    <div id="past-games-panel"></div>
+  </div>
+
+  <!-- TERMS VIEW -->
+  <div class="view" id="view-terms">
+    <p class="greeting-big" style="margin-bottom:6px;">Terms &amp; Conditions</p>
+    <p class="terms-note">Sample terms only - fill in your club’s real terms and conditions before going live.</p>
+
+    <div class="panel">
+      <p class="terms-p">Welcome to our sports club!</p>
+      <p class="terms-p">We take care to give you a great, high-quality experience that keeps you coming back to the activities we organize.</p>
+      <p class="terms-p"><b style="color:var(--signal);">[Fill in here: insurance and liability details relevant to your activity.]</b></p>
+      <p class="terms-p">Every participant must read these terms in full before registering for an activity.</p>
+      <p class="terms-p">Using the site or app constitutes agreement to the terms set out here.</p>
+
+      <p class="terms-sub">Services</p>
+      <p class="terms-p">The system allows registering for activities, purchasing subscriptions, and using the club shop.</p>
+      <p class="terms-p">Payment for services can be made using the payment methods supported by the system.</p>
+
+      <p class="terms-sub">Cancellations</p>
+      <p class="terms-p">[Fill in here: your club’s cancellation policy - how many hours before the activity a free cancellation is allowed.]</p>
+
+      <p class="terms-sub">Contact us</p>
+      <p class="terms-p">For any question, contact us by phone at [your phone number] or by email at [your email address].</p>
+    </div>
+
+    <p class="section-title">On-field rules</p>
+    <div class="panel">
+      <p class="terms-sub">General</p>
+      <p class="terms-p">These rules are meant to help everyone get the most out of the activity, even when there are disputes or officiating mistakes.</p>
+      <p class="terms-p">Verbal or physical violence is strictly prohibited and will be handled at the management team’s discretion.</p>
+      <p class="terms-p">[Add additional rules specific to your venue/activity here: session duration, substitutions, officiating, etc.]</p>
+    </div>
+  </div>
+
+  <!-- ADMIN VIEW -->
+  <div class="view" id="view-admin">
+    <div id="admin-auth-panel"></div>
+
+    <div id="admin-content" style="display:none;">
+    <div class="identity-bar" id="admin-identity-bar"></div>
+
+    <div class="admin-layout">
+      <div class="admin-sidebar" id="admin-sidebar"></div>
+
+      <div class="admin-content-area">
+
+        <div class="admin-section" id="admin-sec-analytics">
+          <p class="section-title" style="margin-top:0;">Analytics</p>
+          <div class="row-2">
+            <div class="panel" id="analytics-revenue-panel"></div>
+            <div class="panel" id="analytics-trend-panel"></div>
+          </div>
+        </div>
+
+        <div class="admin-section" id="admin-sec-agent">
+          <p class="section-title" style="margin-top:0;">Run the agent</p>
+          <div class="panel">
+            <div class="agent-controls">
+              <div class="field"><label>Fill threshold (%)</label><input type="number" id="threshold-input" value="60" min="10" max="95"></div>
+              <div class="field"><label>Look-ahead hours</label><input type="number" id="lookahead-input" value="72" min="1" max="200"></div>
+              <button class="run-btn" id="run-agent-btn">Run check now</button>
+            </div>
+            <p class="empty-note" id="agent-run-note"></p>
+          </div>
+
+          <p class="section-title">Agent proposals - pending approval</p>
+          <div class="panel" id="agent-proposals-panel"><p class="empty-note">No pending proposals</p></div>
+
+          <p class="section-title">Agent log</p>
+          <div class="panel" id="agent-log-panel"><p class="empty-note">No activity yet</p></div>
+        </div>
+
+        <div class="admin-section" id="admin-sec-games">
+          <p class="section-title" style="margin-top:0;">Games</p>
+          <div class="panel">
+            <table>
+              <thead><tr><th>Game</th><th>Date/Time</th><th>Fill</th><th>Status</th></tr></thead>
+              <tbody id="admin-games-body"></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <p class="panel-title">Add a game</p>
+            <div class="add-game-form">
+              <input id="ng-title" placeholder="Game name, e.g. Monday Group A">
+              <select id="ng-format">
+                <option value="Group A">Group A</option>
+                <option value="Group B" selected>Group B</option>
+                <option value="Group C">Group C</option>
+              </select>
+              <input id="ng-location" placeholder="Location">
+              <label class="auth-label" style="margin-top:6px;">Game date &amp; time</label>
+              <input id="ng-datetime" type="datetime-local">
+              <input id="ng-capacity" type="number" placeholder="Capacity (number of players)" min="2">
+            </div>
+            <button class="run-btn" id="add-game-btn">Add game</button>
+          </div>
+        </div>
+
+        <div class="admin-section" id="admin-sec-subscribers">
+          <p class="section-title" style="margin-top:0;">Subscribers</p>
+          <div class="panel">
+            <table>
+              <thead><tr><th>Player</th><th>Plan</th><th>Used this month</th></tr></thead>
+              <tbody id="admin-users-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="admin-section" id="admin-sec-crm">
+          <p class="section-title" style="margin-top:0;">Customers - CRM</p>
+          <div class="panel">
+            <input id="crm-search" placeholder="Search by name, phone or email" style="width:100%;margin-bottom:10px;">
+            <div class="filter-row" id="crm-filter-chips"></div>
+            <div id="crm-table-wrap"><table>
+              <thead><tr><th>Name</th><th>Contact</th><th>Status</th><th>Games</th><th>Level</th></tr></thead>
+              <tbody id="crm-body"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <div class="admin-section" id="admin-sec-playerstats">
+          <p class="section-title" style="margin-top:0;">Update player stats</p>
+          <div class="panel">
+            <p class="pay-note" style="margin-bottom:12px;">Games, appearances and wins aren’t collected automatically from in-app registrations - enter them manually based on what actually happens on the field. An appearance = an evening the player showed up to (even if they played several games); "games" counts each game separately.</p>
+            <input id="ps-name" placeholder="Player name (exact, as it appears elsewhere)">
+            <div class="pay-row">
+              <div class="pay-field"><label>Games</label><input id="ps-games" type="number" min="0"></div>
+              <div class="pay-field"><label>Appearances</label><input id="ps-appearances" type="number" min="0"></div>
+            </div>
+            <div class="pay-row">
+              <div class="pay-field"><label>Wins</label><input id="ps-wins" type="number" min="0"></div>
+              <div class="pay-field"><label>Points</label><input id="ps-points" type="number" min="0"></div>
+            </div>
+            <button class="run-btn" style="width:100%;margin-top:10px;" onclick="savePlayerStats()">Save</button>
+            <p class="pay-error" id="ps-error">Please fill in a name and at least one field</p>
+          </div>
+          <div class="panel" id="player-stats-list"></div>
+        </div>
+
+        <div class="admin-section" id="admin-sec-leads">
+          <p class="section-title" style="margin-top:0;">Leads - Business &amp; Events</p>
+          <div class="panel" id="admin-leads-panel"><p class="empty-note">No inquiries yet</p></div>
+        </div>
+
+        <div class="admin-section" id="admin-sec-ambassadors">
+          <p class="section-title" style="margin-top:0;">Ambassadors - refer a friend</p>
+          <div class="panel">
+            <table>
+              <thead><tr><th>Player</th><th>Successful referrals</th><th>Level</th></tr></thead>
+              <tbody id="admin-ambassadors-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="admin-section" id="admin-sec-orders">
+          <p class="section-title" style="margin-top:0;">Shop orders</p>
+          <div class="panel" id="admin-orders-panel"><p class="empty-note">No orders yet</p></div>
+        </div>
+
+      </div>
+    </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="game-modal-overlay">
+  <div class="modal-box" id="game-modal-box"></div>
+</div>
+
+<div class="modal-overlay" id="past-game-modal-overlay">
+  <div class="modal-box" id="past-game-modal-box"></div>
+</div>
+
+<div class="modal-overlay" id="checkout-overlay">
+  <div class="modal-box" id="checkout-box"></div>
+</div>
+
+<div class="modal-overlay" id="player-modal-overlay" style="z-index:210;">
+  <div class="modal-box" id="player-modal-box"></div>
+</div>
+
+<script>
+let db = null;
+let myAuthId = localStorage.getItem('ts_demo_authid') || null;
+let authStage = 'start'; // start | phone | otp | google
+const DEMO_GOOGLE_ACCOUNTS = [
+  { name:'Dan Cohen', email:'dan.cohen@example.com' },
+  { name:'Michelle Levy', email:'michelle.levy@example.com' },
+];
+let currentUserId = null;
+let openGameId = null;
+let isAdminAuthed = localStorage.getItem('ts_admin_authed') === 'true';
+const ADMIN_PIN = '7331';
+let state = { games: [], users: [], registrations: [], agentLog: [], leads: [], orders: [], agentProposals: [], playerStats: [] };
+
+// Sample catalog - replace with your real product data
+const STORE_PRODUCTS = [
+  { id:'jersey-home', name:'Home Jersey', price:39, coinsPrice:400, sizes:['S','M','L','XL','XXL'], icon:'👕', category:'jerseys', grad:'linear-gradient(135deg,#FFC24B,#FF6B4A)' },
+  { id:'jersey-away', name:'Away Jersey', price:39, coinsPrice:400, sizes:['S','M','L','XL','XXL'], icon:'👕', category:'jerseys', grad:'linear-gradient(135deg,#2C6B44,#0D2818)' },
+  { id:'training-tee', name:'Training Tee', price:24, coinsPrice:250, sizes:['S','M','L','XL'], icon:'🎽', category:'jerseys', grad:'linear-gradient(135deg,#F3EFE4,#7FD99A)' },
+  { id:'socks', name:'Club Socks', price:12, coinsPrice:120, sizes:null, icon:'🧦', category:'accessories', grad:'linear-gradient(135deg,#FFC24B,#173A24)' },
+  { id:'cap', name:'Cap', price:18, coinsPrice:180, sizes:null, icon:'🧢', category:'accessories', grad:'linear-gradient(135deg,#0D2818,#FF6B4A)' },
+  { id:'ball', name:'Club Training Kit', price:27, coinsPrice:270, sizes:null, icon:'🎽', category:'accessories', grad:'linear-gradient(135deg,#F3EFE4,#173A24)' },
+  { id:'bag', name:'Sports Bag', price:30, coinsPrice:300, sizes:null, icon:'🎒', category:'accessories', grad:'linear-gradient(135deg,#2C6B44,#FFC24B)' },
+];
+const STORE_CATEGORIES = [
+  { key:'all', label:'All' },
+  { key:'jerseys', label:'Jerseys' },
+  { key:'accessories', label:'Accessories' },
+];
+let storeFilter = { category:'all', search:'', sort:'default' };
+const COINS_PER_GAME = 8;
+let cart = [];
+
+const SINGLE_GAME_PRICE = 60;
+const PLAN_DEFS = {
+  weekly1: { key:'weekly1', name:'Once a week · 4/month', creditsAllotted:4, priceNis:220, price:'$65/month', desc:'A monthly quota of 4 games.' },
+  weekly2: { key:'weekly2', name:'Twice a week · 8/month', creditsAllotted:8, priceNis:400, price:'$115/month', desc:'A monthly quota of 8 games.' }
+};
+
+// Sample stats data
+// Sample past-games history
+const PAST_GAMES = [
+  { id:0, title: 'Wednesday Group A', location: 'Twin Cities Park', format: 'Group A', dateLabel: 'Sep 10', finalCount: 16, capacity: 18 },
+  { id:1, title: 'Wednesday Group B', location: 'Riverside Court 26', format: 'Group B', dateLabel: 'Sep 10', finalCount: 40, capacity: 42 },
+  { id:2, title: 'Thursday Group B', location: 'Riverside Court 26', format: 'Group B', dateLabel: 'Sep 11', finalCount: 38, capacity: 42 },
+  { id:3, title: 'Saturday Group B', location: 'Lakeside Arena', format: 'Group B', dateLabel: 'Sep 13', finalCount: 35, capacity: 42 },
+  { id:4, title: 'Wednesday Group A', location: 'Twin Cities Park', format: 'Group A', dateLabel: 'Sep 3', finalCount: 18, capacity: 18 },
+  { id:5, title: 'Wednesday Group B', location: 'Riverside Court 26', format: 'Group B', dateLabel: 'Sep 3', finalCount: 41, capacity: 42 },
+];
+
+function renderSubscribePage(){
+  const el = document.getElementById('subscribe-plans-grid');
+  if (!el) return;
+  const user = state.users.find(u=>u.id===currentUserId);
+  el.innerHTML = Object.values(PLAN_DEFS).map(p=>{
+    const isMine = user && user.hasSubscription && user.planKey===p.key;
+    return `
+    <div class="panel" style="${isMine?'border-color:var(--floodlight);':''}">
+      <p class="panel-title">${p.name} ${isMine?'<span class="fill-pill fill-ok">Your plan</span>':''}</p>
+      <p class="product-price">${p.price}</p>
+      <p class="pay-note" style="margin-bottom:14px;">${p.desc}</p>
+      <button class="run-btn" style="width:100%;" ${isMine?'disabled':''} onclick="subscribeBuyPlan('${p.key}')">${isMine?'Your active plan':'Subscribe'}</button>
+    </div>`;
+  }).join('');
+}
+
+function subscribeBuyPlan(planKey){
+  if (!myAuthId) {
+    goToRole('player');
+    return;
+  }
+  openCheckout(planKey);
+}
+
+function goToRole(role){
+  document.querySelectorAll('.role-btn').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-role')===role);
+  });
+  document.getElementById('view-home').classList.toggle('active', role==='home');
+  document.getElementById('view-player').classList.toggle('active', role==='player');
+  document.getElementById('view-subscribe').classList.toggle('active', role==='subscribe');
+  document.getElementById('view-store').classList.toggle('active', role==='store');
+  document.getElementById('view-events').classList.toggle('active', role==='events');
+  document.getElementById('view-past').classList.toggle('active', role==='past');
+  document.getElementById('view-terms').classList.toggle('active', role==='terms');
+  document.getElementById('view-admin').classList.toggle('active', role==='admin');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderHomeTeaser(){
+  const statsEl = document.getElementById('home-stats');
+  const gamesEl = document.getElementById('home-games-teaser');
+  const upcoming = state.games.filter(g=>new Date(g.startsAt).getTime() > Date.now());
+
+  if (statsEl) {
+    const stats = [
+      { icon:'🏆', val: '+20,000', label:'Games played' },
+      { icon:'⚙️', val: 'Multiple formats', label:'Formats &amp; activities' },
+      { icon:'👥', val: '+1,000', label:'Registered players' },
+      { icon:'🌍', val: '+8', label:'Cities' },
+    ];
+    statsEl.innerHTML = stats.map(s=>`
+      <div class="stat-badge-card">
+        <span class="stat-badge-icon">${s.icon}</span>
+        <span class="stat-badge-val ${String(s.val).length>8?'small':''}">${s.val}</span>
+        <span class="stat-badge-label">${s.label}</span>
+      </div>
+    `).join('');
+  }
+
+  if (gamesEl) {
+    gamesEl.innerHTML = upcoming.length ? upcoming.slice(0,6).map(g=>{
+      const when = fmtDateTime(g.startsAt);
+      const pct = g.capacityTotal>0 ? Math.min(100, Math.round(g.capacityUsed/g.capacityTotal*100)) : 0;
+      return `<div class="hgame-card hgame-clickable" onclick="registerFromHome('${g.id}')">
+        <div class="hgame-top"><span class="hgame-format">${g.format || '🏅'}</span><span class="hgame-meta">${when.d} · ${when.t}</span></div>
+        <p class="hgame-title">${g.title}</p>
+        <p class="hgame-meta">${g.location}</p>
+        <div class="hgame-track"><div class="hgame-fill" style="width:${pct}%;"></div></div>
+        <p class="hgame-count">${g.capacityUsed}/${g.capacityTotal} registered</p>
+        <div class="hgame-register-banner">Click to register and pay →</div>
+      </div>`;
+    }).join('') : '<p class="empty-note">No upcoming games right now</p>';
+  }
+}
+
+async function savePlayerStats(){
+  const name = document.getElementById('ps-name').value.trim();
+  const games = document.getElementById('ps-games').value;
+  const appearances = document.getElementById('ps-appearances').value;
+  const wins = document.getElementById('ps-wins').value;
+  const points = document.getElementById('ps-points').value;
+  const errEl = document.getElementById('ps-error');
+  if (!name || (!games && !appearances && !wins && !points)) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+
+  const existing = state.playerStats.find(p=>p.name===name);
+  const data = {
+    name,
+    games: games!=='' ? Number(games) : (existing?.games||0),
+    appearances: appearances!=='' ? Number(appearances) : (existing?.appearances||0),
+    wins: wins!=='' ? Number(wins) : (existing?.wins||0),
+    points: points!=='' ? Number(points) : (existing?.points||0),
+    teamOfRound: existing?.teamOfRound || 0,
+  };
+  if (existing) await db.collection('playerStats').doc(existing.id).update(data);
+  else await db.collection('playerStats').add(data);
+
+  document.getElementById('ps-name').value = '';
+  document.getElementById('ps-games').value = '';
+  document.getElementById('ps-appearances').value = '';
+  document.getElementById('ps-wins').value = '';
+  document.getElementById('ps-points').value = '';
+}
+
+const ADMIN_SECTIONS = [
+  { key:'analytics', icon:'📊', label:'Analytics' },
+  { key:'agent', icon:'🤖', label:'Agent' },
+  { key:'games', icon:'📅', label:'Games' },
+  { key:'subscribers', icon:'🏅', label:'Subscribers' },
+  { key:'crm', icon:'👥', label:'Customers - CRM' },
+  { key:'playerstats', icon:'📈', label:'Player stats' },
+  { key:'leads', icon:'📩', label:'Leads' },
+  { key:'ambassadors', icon:'🌟', label:'Ambassadors' },
+  { key:'orders', icon:'🛍️', label:'Shop orders' },
+];
+let adminActiveSection = 'analytics';
+
+function renderAdminSidebar(){
+  const el = document.getElementById('admin-sidebar');
+  if (!el) return;
+  el.innerHTML = ADMIN_SECTIONS.map(s=>`
+    <div class="admin-sidebar-item ${adminActiveSection===s.key?'active':''}" onclick="showAdminSection('${s.key}')">
+      <span class="asi-icon">${s.icon}</span><span>${s.label}</span>
+    </div>
+  `).join('');
+}
+
+function showAdminSection(key){
+  adminActiveSection = key;
+  ADMIN_SECTIONS.forEach(s=>{
+    document.getElementById('admin-sec-'+s.key).classList.toggle('active', s.key===key);
+  });
+  renderAdminSidebar();
+}
+
+function renderPlayerStatsList(){
+  const el = document.getElementById('player-stats-list');
+  if (!el) return;
+  if (!state.playerStats.length) { el.innerHTML = '<p class="empty-note">No players entered manually yet</p>'; return; }
+  el.innerHTML = state.playerStats.map(p=>`
+    <div class="roster-row" style="cursor:pointer;" onclick="openPlayerStats('${p.name.replace(/'/g,"\\'")}')">
+      <span>${p.name}</span>
+      <span class="roster-tag">${p.games||0} games · ${p.appearances||0} appearances · ${p.wins||0} wins · ${p.points||0} points</span>
+    </div>
+  `).join('');
+}
+
+let crmFilter = { status: 'all', search: '' };
+const CRM_STATUSES = [
+  { key:'all', label:'All' },
+  { key:'subscriber', label:'Active subscriber' },
+  { key:'single', label:'Pay per game' },
+  { key:'lead', label:'Unconverted lead' },
+];
+
+function crmStatusOf(record){
+  if (record._type === 'lead') return 'lead';
+  return record.hasSubscription ? 'subscriber' : 'single';
+}
+
+function setCrmStatus(key){ crmFilter.status = key; renderCrmChips(); renderCrmTable(); }
+
+function renderCrmChips(){
+  const el = document.getElementById('crm-filter-chips');
+  if (!el) return;
+  el.innerHTML = CRM_STATUSES.map(s=>`
+    <div class="chip ${crmFilter.status===s.key?'active':''}" onclick="setCrmStatus('${s.key}')">${s.label}</div>
+  `).join('');
+}
+
+function renderCrmTable(){
+  const el = document.getElementById('crm-body');
+  if (!el) return;
+  const userRecords = state.users.map(u=>({...u, _type:'user'}));
+  const leadRecords = state.leads.map(l=>({...l, _type:'lead', name: l.name}));
+  let all = [...userRecords, ...leadRecords];
+
+  if (crmFilter.status !== 'all') all = all.filter(r=>crmStatusOf(r)===crmFilter.status);
+  if (crmFilter.search) {
+    const q = crmFilter.search.toLowerCase();
+    all = all.filter(r =>
+      (r.name||'').toLowerCase().includes(q) ||
+      (r.phone||'').includes(q) ||
+      (r.email||'').toLowerCase().includes(q)
+    );
+  }
+
+  if (!all.length) { el.innerHTML = '<tr><td colspan="5" style="color:var(--chalk-dim);">No results found</td></tr>'; return; }
+
+  const statusLabel = { subscriber:'Active subscriber', single:'Pay per game', lead:'Lead' };
+  const statusClass = { subscriber:'fill-ok', single:'fill-risk', lead:'fill-crit' };
+
+  el.innerHTML = all.map(r=>{
+    const status = crmStatusOf(r);
+    const games = r._type==='user' ? state.registrations.filter(rg=>rg.userId===r.id && rg.status!=='cancelled_ok').length : '-';
+    const level = r._type==='user' ? getLevelInfo(getTotalXP(r)).level : '-';
+    const contact = r.phone || r.email || '-';
+    const nameCell = r._type==='user'
+      ? `<td style="cursor:pointer;" onclick="openPlayerStats('${(r.name||'').replace(/'/g,"\\'")}')">${r.name}</td>`
+      : `<td>${r.name} <span style="color:var(--chalk-dim);font-size:10.5px;">(lead: ${r.type||'other'})</span></td>`;
+    return `<tr>
+      ${nameCell}
+      <td>${contact}</td>
+      <td><span class="fill-pill ${statusClass[status]}">${statusLabel[status]}</span></td>
+      <td>${games}</td>
+      <td>${level}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPastGames(){
+  const el = document.getElementById('past-games-panel');
+  if (!el) return;
+  el.innerHTML = PAST_GAMES.map(g=>`
+    <div class="game-card" style="cursor:pointer;" onclick="openPastGameDetail(${g.id})">
+      <div class="game-when"><span class="d">${g.dateLabel}</span><span class="t">${g.format}</span></div>
+      <div class="game-info"><p class="g-title">${g.title}</p><p class="g-meta">${g.location} · ${g.finalCount}/${g.capacity} attended · click for details ›</p></div>
+      <span class="fill-pill fill-ok">Finished</span>
+    </div>
+  `).join('');
+}
+
+const REAL_POINTS_LEADERBOARD = [
+  { name:'Alex Morgan', points:1000 },
+  { name:'Dan Cohen', points:762 },
+  { name:'Sam Levy', points:610 },
+  { name:'Ray Barton', points:394 },
+  { name:'Eli Ozeri', points:377 },
+];
+const REAL_PLAYER_DETAILS = {
+  'Alex Morgan': { points:1000, wins:911, teamOfRound:102 },
+  'Dan Cohen': { points:762, wins:1085, teamOfRound:110 },
+  'Sam Levy': { points:610, wins:549, teamOfRound:55 },
+};
+
+// Sample games and participant lists
+function relDate(daysOffset, hh, mm){
+  const d = new Date();
+  d.setDate(d.getDate() + daysOffset);
+  d.setHours(hh, mm, 0, 0);
+  return d.toISOString().slice(0,19);
+}
+const REAL_GAMES = [
+  {
+    title: 'Wednesday Group A', location: 'Twin Cities Park', format: 'Group A',
+    startsAt: relDate(-6, 19, 0), capacityTotal: 18,
+    roster: ['Alex Carter','Jordan Lee','Sam Rivera','Chris Morgan','Taylor Kim','Jamie Foster','Casey Brooks','Morgan Reed','Drew Bailey','Riley Cooper','Quinn Adler']
+  },
+  {
+    title: 'Wednesday Group B', location: 'Riverside Court 26', format: 'Group B',
+    startsAt: relDate(-6, 21, 0), capacityTotal: 42,
+    roster: ['Alex Carter','Jordan Lee','Sam Rivera','Chris Morgan','Taylor Kim','Jamie Foster','Casey Brooks','Morgan Reed','Drew Bailey','Riley Cooper','Quinn Adler','Avery Stone','Blake Hunter','Cameron Ford','Dana Ellis','Ezra Cole','Finn Harper','Gray Mercer','Harper Vale','Ivy Sloan','Jules Barrett','Kai Monroe','Leo Whitman','Micah Grant','Noor Kessler','Owen Vance','Parker Nash','Quincy Ray','Robin Shea','Sage Dunn','Toby Lane','Uri Stern','Val Torres','Wren Ashby','Xan Foley','Yuval Carr','Zane Rhodes','Eli Novak']
+  },
+  {
+    title: 'Thursday Group B', location: 'Riverside Court 26', format: 'Group B',
+    startsAt: relDate(-5, 21, 0), capacityTotal: 42,
+    roster: ['Alex Carter','Jordan Lee','Sam Rivera','Chris Morgan','Taylor Kim','Jamie Foster','Casey Brooks','Morgan Reed','Drew Bailey','Riley Cooper','Quinn Adler','Avery Stone','Blake Hunter','Cameron Ford','Dana Ellis','Ezra Cole','Finn Harper','Gray Mercer','Harper Vale','Ivy Sloan','Jules Barrett','Kai Monroe','Leo Whitman','Micah Grant','Noor Kessler','Owen Vance','Parker Nash','Quincy Ray','Robin Shea','Sage Dunn','Toby Lane','Uri Stern','Val Torres','Wren Ashby','Xan Foley']
+  },
+  {
+    title: 'Weekend Group B (Tournament)', location: 'Lakeside Arena', format: 'Group B',
+    startsAt: relDate(2, 20, 30), capacityTotal: 42,
+    roster: [], estimatedFill: 9
+  },
+];
+
+// Sample names for the single-game stats demo
+const REAL_NAME_POOL = [...new Set(REAL_GAMES.flatMap(g=>g.roster))].filter(n=>n && n.length>1);
+
+function getPastGameDetail(gameId){
+  const g = PAST_GAMES[gameId];
+  const h = hashString(g.title + g.dateLabel);
+  const rosterSize = Math.min(g.finalCount, 16, REAL_NAME_POOL.length);
+  const names = [];
+  for (let i=0;i<rosterSize;i++){
+    names.push(REAL_NAME_POOL[(h + i*13) % REAL_NAME_POOL.length]);
+  }
+  const players = names.map((name,i)=>{
+    const points = seededRange(h+i*7, 0, 6);
+    const team = i % 2 === 0 ? 'White' : 'Black';
+    return { name, points, team };
+  }).sort((a,b)=>b.points-a.points);
+  return {
+    players,
+    whiteScore: seededRange(h+1, 2, 8),
+    blackScore: seededRange(h+2, 2, 8),
+    teamOfRound: players.slice(0, Math.min(5, players.length)),
+  };
+}
+
+function openPastGameDetail(gameId){
+  window._pastGameTab = 'participants';
+  renderPastGameModalBody(gameId);
+  document.getElementById('past-game-modal-overlay').classList.add('open');
+}
+
+function closePastGameDetail(){
+  document.getElementById('past-game-modal-overlay').classList.remove('open');
+}
+
+function setPastGameTab(tab, gameId){
+  window._pastGameTab = tab;
+  renderPastGameModalBody(gameId);
+}
+
+function renderPastGameModalBody(gameId){
+  const g = PAST_GAMES[gameId];
+  const detail = getPastGameDetail(gameId);
+  const tab = window._pastGameTab || 'participants';
+  const box = document.getElementById('past-game-modal-box');
+  const tabsHtml = `
+    <div class="filter-row" style="margin-bottom:14px;">
+      <div class="chip ${tab==='participants'?'active':''}" onclick="setPastGameTab('participants',${gameId})">Participants</div>
+      <div class="chip ${tab==='teamround'?'active':''}" onclick="setPastGameTab('teamround',${gameId})">Top Performer</div>
+      <div class="chip ${tab==='video'?'active':''}" onclick="setPastGameTab('video',${gameId})">Video</div>
+    </div>`;
+
+  let content = '';
+  if (tab === 'participants') {
+    content = `
+      <p class="pay-note" style="margin-bottom:10px;">Final score: White ${detail.whiteScore} - ${detail.blackScore} Black · this game’s data is simulated for the demo</p>
+      ${detail.players.map((p,i)=>`
+        <div class="roster-row" style="cursor:pointer;" onclick="openPlayerStats('${p.name.replace(/'/g,"\\'")}')">
+          <span>${i===0?'👑 ':''}${p.name} <span class="fill-pill ${p.team==='White'?'fill-ok':'fill-crit'}" style="margin-left:6px;">${p.team}</span></span>
+          <span class="roster-tag">${p.points} points</span>
+        </div>
+      `).join('')}
+    `;
+  } else if (tab === 'teamround') {
+    content = `
+      <p class="pay-note" style="margin-bottom:14px;">Selected based on performance in this game (demo) - click a player to see their stats</p>
+      <div class="stat-tile-grid">
+        ${detail.teamOfRound.map((p,i)=>`
+          <div class="stat-tile" style="cursor:pointer;" onclick="openPlayerStats('${p.name.replace(/'/g,"\\'")}')">
+            <span class="st-val">${i===0?'👑':'⭐'}</span>
+            <span class="st-label">${p.name}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    content = `<p class="empty-note">Game video isn’t available in the demo - in production this would require a video hosting/streaming service (e.g. a fixed venue camera + a service like Mux or Cloudflare Stream).</p>`;
+  }
+
+  box.innerHTML = `
+    <div class="modal-head">
+      <div><p class="modal-title">${g.title}</p><p class="modal-meta">${g.location} · ${g.dateLabel} · ${g.finalCount}/${g.capacity} attended</p></div>
+      <button class="modal-close" onclick="closePastGameDetail()">✕</button>
+    </div>
+    ${tabsHtml}
+    ${content}
+  `;
+}
+
+function fmtDateTime(iso){
+  const d = new Date(iso);
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return { d: days[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1), t: String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0') };
+}
+function getPeriodStartISO(date){
+  const d = new Date(date);
+  d.setDate(1);
+  d.setHours(0,0,0,0);
+  return d.toISOString();
+}
+const XP_PER_LEVEL = 300;
+const XP_PER_GAME = 80;
+const XP_PER_REFERRAL = 150;
+function hoursUntil(iso){
+  return (new Date(iso).getTime() - Date.now()) / 3600000;
+}
+// Per the terms: can cancel no later than 10:00 AM on game day. After that - full charge.
+function isPastCancelCutoff(gameStartsAtISO){
+  const gameDate = new Date(gameStartsAtISO);
+  const cutoff = new Date(gameDate.getFullYear(), gameDate.getMonth(), gameDate.getDate(), 10, 0, 0, 0);
+  return Date.now() >= cutoff.getTime();
+}
+function computeGameXP(userId){
+  let locked = 0, pending = 0;
+  state.registrations.filter(r=>r.userId===userId).forEach(r=>{
+    if (r.status === 'cancelled_late') {
+      locked += XP_PER_GAME; // was committed past the free-cancel window - counts as if played
+    } else if (r.status === 'confirmed') {
+      if (isPastCancelCutoff(r.gameStartsAt)) locked += XP_PER_GAME; // past the point of no return
+      else pending += XP_PER_GAME; // still freely cancellable - not earned yet
+    }
+    // cancelled_ok (cancelled early, free) contributes 0, always
+  });
+  return { locked, pending };
+}
+function getTotalXP(user){
+  return (user.bonusXp || 0) + computeGameXP(user.id).locked;
+}
+function getTotalCoins(user){
+  const earned = Math.floor(computeGameXP(user.id).locked / XP_PER_GAME) * COINS_PER_GAME;
+  return Math.max(0, earned - (user.coinsSpent || 0));
+}
+function getLevelInfo(xp){
+  xp = xp || 0;
+  const level = Math.floor(xp / XP_PER_LEVEL) + 1;
+  const intoLevel = xp % XP_PER_LEVEL;
+  const pct = Math.round((intoLevel / XP_PER_LEVEL) * 100);
+  return { level, intoLevel, pct, remaining: XP_PER_LEVEL - intoLevel };
+}
+function generateReferralCode(phone){
+  const suffix = (phone || '0000').slice(-4);
+  const rand = Math.random().toString(36).slice(2,4).toUpperCase();
+  return 'TS' + suffix + rand;
+}
+async function ensureUserDefaults(user){
+  const patch = {};
+  if (user.bonusXp === undefined) patch.bonusXp = 0;
+  if (!user.referralCode) patch.referralCode = generateReferralCode(user.phone || user.email);
+  if (user.referralCount === undefined) patch.referralCount = 0;
+  if (!user.authId && user.phone) { patch.authId = 'phone:' + user.phone; patch.authProvider = 'phone'; }
+  if (Object.keys(patch).length) {
+    await db.collection('users').doc(user.id).update(patch);
+    Object.assign(user, patch);
+  }
+  return user;
+}
+function fillStatus(used, cap){
+  const pct = cap > 0 ? used/cap : 0;
+  if (used >= cap) return {label:'Full', cls:'fill-full', color:'var(--chalk-dim)'};
+  if (pct >= 0.8) return {label:'Almost full', cls:'fill-ok', color:'var(--ok)'};
+  if (pct >= 0.5) return {label:'At risk', cls:'fill-risk', color:'var(--floodlight)'};
+  return {label:'Critical', cls:'fill-crit', color:'var(--signal)'};
+}
+function playerFillStatus(used, cap){
+  const pct = cap > 0 ? used/cap : 0;
+  if (used >= cap) return {label:'Full', cls:'fill-full'};
+  if (pct >= 0.85) return {label:'Almost full - register fast', cls:'fill-crit'};
+  return {label:'Open for registration', cls:'fill-ok'};
+}
+
+
+/* ---------------------------------------------------------------
+   Standalone local database fallback.
+   When this page runs inside the Claude artifact runtime, window.claude.use('db')
+   provides a real hosted database. When it runs standalone (downloaded, hosted on
+   your own server), that API doesn't exist, so this lightweight Firestore-style
+   shim persists the same data to the browser's localStorage instead. Swap this
+   out for your own backend (Firebase, Supabase, a REST API, etc.) when you're
+   ready to go to production.
+--------------------------------------------------------------- */
+class LocalDB {
+  constructor(storageKey){
+    this.storageKey = storageKey || 'club_app_local_db';
+    this.listeners = {};
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      this.data = raw ? JSON.parse(raw) : {};
+    } catch(e) { this.data = {}; }
+  }
+  _save(){
+    try { localStorage.setItem(this.storageKey, JSON.stringify(this.data)); } catch(e) {}
+  }
+  _notify(name){
+    (this.listeners[name] || []).forEach(sub => sub.trigger());
+  }
+  collection(name){
+    if (!this.data[name]) this.data[name] = {};
+    return new LocalCollection(this, name);
+  }
+  doc(path){
+    const parts = String(path).split('/');
+    const col = parts[0];
+    const id = parts[1];
+    return this.collection(col).doc(id);
+  }
+}
+class LocalCollection {
+  constructor(db, name){ this.db = db; this.name = name; this._order = null; }
+  doc(id){
+    if (!id) id = 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+    return new LocalDocRef(this.db, this.name, id);
+  }
+  async add(data){
+    const ref = this.doc();
+    await ref.set(data);
+    return ref;
+  }
+  orderBy(field, dir){
+    this._order = { field, dir: dir || 'asc' };
+    return this;
+  }
+  _snapshotDocs(){
+    const col = this.db.data[this.name] || {};
+    let docs = Object.keys(col).map(id => ({ id, data: col[id] }));
+    if (this._order) {
+      const { field, dir } = this._order;
+      docs.sort((a, b) => {
+        const av = a.data ? a.data[field] : undefined;
+        const bv = b.data ? b.data[field] : undefined;
+        if (av === bv) return 0;
+        const cmp = (av > bv) ? 1 : -1;
+        return dir === 'desc' ? -cmp : cmp;
+      });
+    }
+    return docs;
+  }
+  async get(){
+    const docs = this._snapshotDocs();
+    return {
+      docs: docs.map(d => ({ id: d.id, data: () => d.data, exists: true })),
+      empty: docs.length === 0,
+      size: docs.length,
+    };
+  }
+  onSnapshot(onNext, onError){
+    if (!this.db.listeners[this.name]) this.db.listeners[this.name] = [];
+    const sub = {
+      trigger: async () => {
+        try { onNext(await this.get()); }
+        catch (e) { if (onError) onError(e); }
+      }
+    };
+    this.db.listeners[this.name].push(sub);
+    sub.trigger();
+    return () => {
+      this.db.listeners[this.name] = (this.db.listeners[this.name] || []).filter(s => s !== sub);
+    };
+  }
+}
+class LocalDocRef {
+  constructor(db, colName, id){ this.db = db; this.colName = colName; this.id = id; }
+  async get(){
+    const col = this.db.data[this.colName] || {};
+    const data = col[this.id];
+    return { id: this.id, exists: !!data, data: () => data };
+  }
+  async set(data){
+    if (!this.db.data[this.colName]) this.db.data[this.colName] = {};
+    this.db.data[this.colName][this.id] = { ...data };
+    this.db._save();
+    this.db._notify(this.colName);
+    return this;
+  }
+  async update(data){
+    if (!this.db.data[this.colName]) this.db.data[this.colName] = {};
+    const existing = this.db.data[this.colName][this.id] || {};
+    this.db.data[this.colName][this.id] = { ...existing, ...data };
+    this.db._save();
+    this.db._notify(this.colName);
+  }
+  async delete(){
+    if (this.db.data[this.colName]) delete this.db.data[this.colName][this.id];
+    this.db._save();
+    this.db._notify(this.colName);
+  }
+}
+
+async function init(){
+  try {
+    db = await window.claude.use('db');
+  } catch(e) { db = null; }
+  if (!db) {
+    // Not running inside the Claude artifact runtime - use the local fallback
+    // database so the app works standalone (see LocalDB above).
+    db = new LocalDB();
+  }
+  await seedIfEmpty();
+  subscribeAll();
+  wireUI();
+  renderAuthPanel();
+  renderAdminAuth();
+  renderLeadForm(false);
+  renderStoreCategories();
+  renderCrmChips();
+  renderStoreProducts();
+  renderHomeTeaser();
+  renderSubscribePage();
+  renderCart();
+}
+
+const SEED_VERSION = 5;
+
+async function seedIfEmpty(){
+  const versionDoc = await db.doc('meta/seedVersion').get();
+  const currentVersion = versionDoc.exists ? versionDoc.data().version : 0;
+
+  if (currentVersion < SEED_VERSION) {
+    const oldGames = await db.collection('games').get();
+    for (const d of oldGames.docs) { await db.collection('games').doc(d.id).delete(); }
+    const oldRegs = await db.collection('registrations').get();
+    for (const d of oldRegs.docs) { await db.collection('registrations').doc(d.id).delete(); }
+
+    const gameRefs = [];
+    for (const g of REAL_GAMES) {
+      const capacityUsed = g.roster.length || g.estimatedFill || 0;
+      const gameRef = await db.collection('games').add({
+        title: g.title, location: g.location, startsAt: new Date(g.startsAt).toISOString(),
+        capacityTotal: g.capacityTotal, capacityUsed, format: g.format,
+        fillIsEstimated: g.roster.length === 0 && !!g.estimatedFill
+      });
+      gameRefs.push({ ref: gameRef, game: g });
+      let i = 0;
+      for (const name of g.roster) {
+        i++;
+        await db.collection('registrations').add({
+          gameId: gameRef.id, gameTitle: g.title, userId: 'real_' + gameRef.id + '_' + i,
+          userName: name, chargeType: 'single', status: 'confirmed',
+          createdAt: new Date().toISOString(), gameStartsAt: new Date(g.startsAt).toISOString(),
+          source: 'sample-data'
+        });
+      }
+    }
+
+    // Pre-seed a ready-to-approve agent proposal for the under-filled upcoming game,
+    // so the AI agent's value is visible immediately on first load - no need to click
+    // "Run check now" to see what it does.
+    const oldProposals = await db.collection('agentProposals').get();
+    for (const d of oldProposals.docs) { await db.collection('agentProposals').doc(d.id).delete(); }
+    const oldLog = await db.collection('agentLog').get();
+    for (const d of oldLog.docs) { await db.collection('agentLog').doc(d.id).delete(); }
+
+    const targetEntry = gameRefs.find(e => e.game.roster.length === 0 && e.game.estimatedFill);
+    if (targetEntry) {
+      const { ref: gameRef, game: g } = targetEntry;
+      const freq = {};
+      for (const entry of gameRefs) {
+        if (entry.game.format !== g.format || entry === targetEntry) continue;
+        entry.game.roster.forEach((name, idx) => {
+          const userId = 'real_' + entry.ref.id + '_' + (idx + 1);
+          if (!freq[userId]) freq[userId] = { userId, name, count: 0 };
+          freq[userId].count++;
+        });
+      }
+      const candidates = Object.values(freq).sort((a, b) => b.count - a.count).slice(0, 15)
+        .map(c => ({ userId: c.userId, name: c.name, pastCount: c.count, isSubscriber: false, score: c.count * 10 }));
+      const startsAtIso = new Date(g.startsAt).toISOString();
+      const dt = fmtDateTime(startsAtIso);
+      await db.collection('agentProposals').add({
+        gameId: gameRef.id, gameTitle: g.title, gameLocation: g.location, gameStartsAt: startsAtIso, gameFormat: g.format,
+        fillRateAtTrigger: Math.round((g.estimatedFill / g.capacityTotal) * 100), thresholdUsed: 60,
+        candidates, selectedIds: candidates.map(c => c.userId),
+        messagePreview: `Hi [name], ${g.title} still has ${g.capacityTotal - g.estimatedFill} spots left. ${dt.d} · ${dt.t} · ${g.location}. Register: [link]`,
+        status: 'pending', createdAt: new Date().toISOString()
+      });
+    }
+
+    await db.doc('meta/seedVersion').set({ version: SEED_VERSION });
+  }
+
+  const usersSnap = await db.collection('users').get();
+  if (usersSnap.empty) {
+    const ps = getPeriodStartISO(Date.now());
+    const seedUsers = [
+      { name: 'Yuval Cohen', phone: '0501111111', hasSubscription: true, planName: 'Twice a week · 8/month', creditsAllotted: 8, creditsUsed: 3, periodStart: ps },
+      { name: 'Daniel Abraham', phone: '0502222222', hasSubscription: true, planName: 'Twice a week · 8/month', creditsAllotted: 8, creditsUsed: 6, periodStart: ps },
+      { name: 'Michelle Sharon', phone: '0503333333', hasSubscription: true, planName: 'Once a week · 4/month', creditsAllotted: 4, creditsUsed: 0, periodStart: ps },
+      { name: 'Asaf Barak', phone: '0504444444', hasSubscription: false, planName: 'Pay per game', creditsAllotted: 0, creditsUsed: 0, periodStart: ps },
+    ];
+    for (const u of seedUsers) { await db.collection('users').add(u); }
+  }
+}
+
+function subscribeAll(){
+  db.collection('games').orderBy('startsAt','asc').onSnapshot(snap=>{
+    state.games = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }, err=>console.error(err));
+
+  db.collection('users').onSnapshot(snap=>{
+    state.users = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    if (myAuthId) {
+      const match = state.users.find(u=>u.authId===myAuthId);
+      if (match) {
+        currentUserId = match.id;
+        finalizeIfRenewalPassed(match);
+      }
+    }
+    render();
+  }, err=>console.error(err));
+
+  db.collection('registrations').onSnapshot(snap=>{
+    state.registrations = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }, err=>console.error(err));
+
+  db.collection('agentLog').orderBy('triggeredAt','desc').onSnapshot(snap=>{
+    state.agentLog = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }, err=>console.error(err));
+
+  db.collection('leads').orderBy('createdAt','desc').onSnapshot(snap=>{
+    state.leads = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }, err=>console.error(err));
+
+  db.collection('orders').orderBy('createdAt','desc').onSnapshot(snap=>{
+    state.orders = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }, err=>console.error(err));
+
+  db.collection('agentProposals').orderBy('createdAt','desc').onSnapshot(snap=>{
+    state.agentProposals = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }, err=>console.error(err));
+
+  db.collection('playerStats').onSnapshot(snap=>{
+    state.playerStats = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }, err=>console.error(err));
+}
+
+function wireUI(){
+  document.querySelectorAll('.role-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const role = btn.getAttribute('data-role');
+      document.getElementById('view-home').classList.toggle('active', role==='home');
+      document.getElementById('view-player').classList.toggle('active', role==='player');
+      document.getElementById('view-subscribe').classList.toggle('active', role==='subscribe');
+      document.getElementById('view-store').classList.toggle('active', role==='store');
+      document.getElementById('view-events').classList.toggle('active', role==='events');
+      document.getElementById('view-past').classList.toggle('active', role==='past');
+      document.getElementById('view-terms').classList.toggle('active', role==='terms');
+      document.getElementById('view-admin').classList.toggle('active', role==='admin');
+      if (role==='admin') renderAdminAuth();
+      if (role==='past') renderPastGames();
+    });
+  });
+
+  document.getElementById('run-agent-btn').addEventListener('click', runAgentCheck);
+  document.getElementById('add-game-btn').addEventListener('click', addGame);
+  document.getElementById('crm-search').addEventListener('input', (e)=>{
+    crmFilter.search = e.target.value.trim();
+    renderCrmTable();
+  });
+  document.getElementById('store-search').addEventListener('input', (e)=>{
+    storeFilter.search = e.target.value.trim();
+    renderStoreProducts();
+  });
+  document.getElementById('store-sort').addEventListener('change', (e)=>{
+    storeFilter.sort = e.target.value;
+    renderStoreProducts();
+  });
+  document.getElementById('game-modal-overlay').addEventListener('click', (e)=>{
+    if (e.target.id === 'game-modal-overlay') closeGameModal();
+  });
+  document.getElementById('checkout-overlay').addEventListener('click', (e)=>{
+    if (e.target.id === 'checkout-overlay') closeCheckout();
+  });
+  document.getElementById('player-modal-overlay').addEventListener('click', (e)=>{
+    if (e.target.id === 'player-modal-overlay') closePlayerStats();
+  });
+}
+
+function renderLeadForm(submitted){
+  const el = document.getElementById('lead-form-panel');
+  if (!el) return;
+  if (submitted) {
+    el.innerHTML = `<p class="credit-note" style="font-size:14px;">Thanks! We got your details and will get back to you soon.</p>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="pay-field"><label>Full name</label><input id="lead-name" placeholder="Full name"></div>
+    <div class="pay-field"><label>Phone</label><input id="lead-phone" type="tel" placeholder="050-1234567"></div>
+    <div class="pay-field"><label>Event type</label>
+      <select id="lead-type">
+        <option value="B2B">Company tournament</option>
+        <option value="private">Private event</option>
+        <option value="birthday">Adult birthday</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="pay-field"><label>Estimated date</label><input id="lead-date" type="date"></div>
+    <div class="pay-field"><label>Additional details</label><textarea id="lead-message" placeholder="Number of participants, preferences, etc."></textarea></div>
+    <p class="pay-error" id="lead-error">Please fill in a name and phone number</p>
+    <button class="run-btn" id="lead-submit-btn">Submit</button>
+  `;
+  document.getElementById('lead-submit-btn').addEventListener('click', submitLead);
+}
+
+async function submitLead(){
+  const name = document.getElementById('lead-name').value.trim();
+  const phone = document.getElementById('lead-phone').value.trim();
+  const type = document.getElementById('lead-type').value;
+  const date = document.getElementById('lead-date').value;
+  const message = document.getElementById('lead-message').value.trim();
+  const errEl = document.getElementById('lead-error');
+  if (!name || !phone) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  const btn = document.getElementById('lead-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  await db.collection('leads').add({
+    name, phone, type, date: date || null, message: message || null,
+    createdAt: new Date().toISOString(), status: 'new'
+  });
+  renderLeadForm(true);
+}
+
+function renderAdminOrders(){
+  const el = document.getElementById('admin-orders-panel');
+  if (!el) return;
+  if (!state.orders.length) { el.innerHTML = '<p class="empty-note">No orders yet</p>'; return; }
+  el.innerHTML = state.orders.map(o=>{
+    const itemsText = (o.items||[]).map(i=>`${i.name}${i.size?' ('+i.size+')':''} ×${i.qty}`).join(', ');
+    return `<div class="history-row">
+      <div class="history-icon">🛒</div>
+      <div class="history-info">
+        <p class="h-title">${o.name} · ${o.phone} · $${o.total}</p>
+        <p class="h-date">${itemsText} · ${o.address}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAdminAmbassadors(){
+  const el = document.getElementById('admin-ambassadors-body');
+  if (!el) return;
+  const sorted = [...state.users].filter(u=>u.referralCount>0).sort((a,b)=>(b.referralCount||0)-(a.referralCount||0));
+  if (!sorted.length) { el.innerHTML = '<tr><td colspan="3" style="color:var(--chalk-dim);">No referrals yet</td></tr>'; return; }
+  el.innerHTML = sorted.map(u=>{
+    const info = getLevelInfo(getTotalXP(u));
+    return `<tr><td style="cursor:pointer;" onclick="openPlayerStats('${u.name.replace(/'/g,"\\'")}')">${u.name}</td><td>${u.referralCount}</td><td>Level ${info.level}</td></tr>`;
+  }).join('');
+}
+
+function renderAgentProposals(){
+  const el = document.getElementById('agent-proposals-panel');
+  if (!el) return;
+  const pending = state.agentProposals.filter(p=>p.status==='pending');
+  if (!pending.length) { el.innerHTML = '<p class="empty-note">No pending proposals</p>'; return; }
+  el.innerHTML = pending.map(p=>{
+    const candidates = p.candidates || [];
+    const selected = new Set(p.selectedIds || []);
+    return `
+    <div class="proposal-card">
+      <div class="proposal-head">
+        <div>
+          <p class="proposal-title">${p.gameTitle}</p>
+          <p class="proposal-meta">Fill ${p.fillRateAtTrigger}% (threshold ${p.thresholdUsed}%) · ${candidates.length} candidates found · ${selected.size} selected to send</p>
+        </div>
+        <span class="fill-pill fill-crit">Awaiting approval</span>
+      </div>
+      <div class="proposal-msg">${p.messagePreview}</div>
+      ${!candidates.length ? '<p class="empty-note" style="margin:10px 0;">No players with a registration history for this format who aren\'t already registered for this game.</p>' : `
+      <p class="pay-note" style="margin:10px 0 6px;">Candidates ranked by registration history for format ${p.gameFormat||''} + a bonus for active subscribers. Check who to send to:</p>
+      <div class="candidate-list">
+        ${candidates.map(c=>`
+          <label class="candidate-row">
+            <input type="checkbox" ${selected.has(c.userId)?'checked':''} onchange="toggleCandidateSelection('${p.id}','${c.userId}')">
+            <span class="candidate-name">${c.name}</span>
+            <span class="candidate-reason">${c.pastCount} past registrations${c.isSubscriber?' · active subscriber':''}</span>
+          </label>
+        `).join('')}
+      </div>
+      `}
+      <div class="proposal-actions">
+        <button class="run-btn" style="flex:1;padding:9px;" ${!selected.size?'disabled':''} onclick="approveProposal('${p.id}')">Approve &amp; send to ${selected.size} selected</button>
+        <button class="action-btn secondary" style="flex:1;" onclick="rejectProposal('${p.id}')">Reject</button>
+      </div>
+    </div>
+  `;
+  }).join('');
+}
+
+function renderAnalytics(){
+  const revEl = document.getElementById('analytics-revenue-panel');
+  const trendEl = document.getElementById('analytics-trend-panel');
+  if (!revEl || !trendEl) return;
+
+  // Revenue: pay-per-game + subscriptions (estimated from monthly rate) + shop
+  const singleRevenue = state.registrations.filter(r=>r.chargeType==='single' && r.status==='confirmed').length * SINGLE_GAME_PRICE;
+  const subRevenue = state.users.filter(u=>u.hasSubscription).reduce((sum,u)=>{
+    const plan = Object.values(PLAN_DEFS).find(p=>p.key===u.planKey);
+    return sum + (plan ? plan.priceNis : 0);
+  }, 0);
+  const storeRevenue = state.orders.reduce((sum,o)=>sum + (o.total||0), 0);
+  const maxRev = Math.max(singleRevenue, subRevenue, storeRevenue, 1);
+
+  revEl.innerHTML = `
+    <p class="panel-title">Estimated revenue (this month)</p>
+    <div class="rev-bar-row">
+      <div class="rev-bar-label"><span>Subscriptions</span><b>$${subRevenue}</b></div>
+      <div class="rev-track"><div class="rev-fill" style="width:${subRevenue/maxRev*100}%;"></div></div>
+    </div>
+    <div class="rev-bar-row">
+      <div class="rev-bar-label"><span>Pay per game</span><b>$${singleRevenue}</b></div>
+      <div class="rev-track"><div class="rev-fill alt" style="width:${singleRevenue/maxRev*100}%;"></div></div>
+    </div>
+    <div class="rev-bar-row">
+      <div class="rev-bar-label"><span>Shop</span><b>$${storeRevenue}</b></div>
+      <div class="rev-track"><div class="rev-fill alt2" style="width:${storeRevenue/maxRev*100}%;"></div></div>
+    </div>
+  `;
+
+  // Registrations in the last 7 days
+  const days = [];
+  for (let i=6;i>=0;i--){
+    const d = new Date(Date.now() - i*86400000);
+    days.push({ key: d.toDateString(), label: ['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()], count: 0 });
+  }
+  state.registrations.forEach(r=>{
+    const d = new Date(r.createdAt).toDateString();
+    const day = days.find(x=>x.key===d);
+    if (day) day.count++;
+  });
+  const maxCount = Math.max(...days.map(d=>d.count), 1);
+  trendEl.innerHTML = `
+    <p class="panel-title">Registrations - last 7 days</p>
+    <div class="trend-chart">
+      ${days.map(d=>`
+        <div class="trend-col">
+          <span class="trend-val">${d.count}</span>
+          <div class="trend-bar" style="height:${Math.max(4,d.count/maxCount*90)}px;"></div>
+          <span class="trend-label">${d.label}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderAdminLeads(){
+  const el = document.getElementById('admin-leads-panel');
+  if (!el) return;
+  if (!state.leads.length) { el.innerHTML = '<p class="empty-note">No inquiries yet</p>'; return; }
+  const typeLabels = {B2B:'Company tournament', private:'Private event', birthday:'Birthday', other:'Other'};
+  el.innerHTML = state.leads.map(l=>`
+    <div class="history-row">
+      <div class="history-icon">📋</div>
+      <div class="history-info">
+        <p class="h-title">${l.name} · ${l.phone}</p>
+        <p class="h-date">${typeLabels[l.type]||l.type}${l.date?' · '+l.date:''}${l.message?' · '+l.message:''}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminAuth(){
+  const authEl = document.getElementById('admin-auth-panel');
+  const contentEl = document.getElementById('admin-content');
+  if (!authEl || !contentEl) return;
+
+  if (isAdminAuthed) {
+    authEl.style.display = 'none';
+    contentEl.style.display = 'block';
+    renderAdminSidebar();
+    showAdminSection(adminActiveSection);
+    const bar = document.getElementById('admin-identity-bar');
+    if (bar) bar.innerHTML = `<span>Logged in as <b>Admin</b></span><button class="logout-link" onclick="adminLogout()">Log out</button>`;
+    return;
+  }
+  contentEl.style.display = 'none';
+  authEl.style.display = 'block';
+  authEl.innerHTML = `
+    <div class="auth-panel">
+      <h2>Admin login</h2>
+      <p class="hint">This area is restricted to club staff only. Enter your access code.</p>
+      <p class="hint" style="background:rgba(255,255,255,0.06);border:1px dashed var(--chalk-dim);border-radius:8px;padding:10px 14px;margin:0 0 18px;">
+        🔑 Demo access code: <b style="letter-spacing:2px;color:#fff;">${ADMIN_PIN}</b>
+        &nbsp;<button type="button" id="admin-pin-autofill" class="run-btn" style="padding:4px 10px;font-size:12px;margin-left:6px;">Autofill &amp; log in</button>
+      </p>
+      <input id="admin-pin-input" type="password" placeholder="Access code" maxlength="10">
+      <p class="pay-error" id="admin-pin-error">Incorrect code</p>
+      <button class="run-btn" id="admin-pin-btn">Log in</button>
+    </div>`;
+  const autofillBtn = document.getElementById('admin-pin-autofill');
+  if (autofillBtn) autofillBtn.addEventListener('click', ()=>{
+    document.getElementById('admin-pin-input').value = ADMIN_PIN;
+    document.getElementById('admin-pin-btn').click();
+  });
+  document.getElementById('admin-pin-btn').addEventListener('click', ()=>{
+    const val = document.getElementById('admin-pin-input').value.trim();
+    const errEl = document.getElementById('admin-pin-error');
+    if (val !== ADMIN_PIN) { errEl.classList.add('show'); return; }
+    errEl.classList.remove('show');
+    isAdminAuthed = true;
+    localStorage.setItem('ts_admin_authed', 'true');
+    renderAdminAuth();
+  });
+}
+
+function adminLogout(){
+  isAdminAuthed = false;
+  localStorage.removeItem('ts_admin_authed');
+  renderAdminAuth();
+}
+
+let _lastAuthRenderKey = null;
+
+function renderAuthPanel(){
+  const el = document.getElementById('auth-panel');
+  const content = document.getElementById('player-content');
+
+  if (myAuthId) {
+    el.style.display = 'none';
+    content.style.display = 'block';
+    _lastAuthRenderKey = null;
+    return;
+  }
+  content.style.display = 'none';
+  el.style.display = 'block';
+
+  // Prevents destructive form re-render (which would erase name/phone already typed)
+  // every time some app data changes and triggers a general render().
+  // Rebuild only when actually changing login stage/method, not on every data update.
+  const renderKey = authStage + ':' + (window._loginMethod || 'email');
+  if (_lastAuthRenderKey === renderKey) return;
+  _lastAuthRenderKey = renderKey;
+
+  const header = `
+    <h1 class="auth-title">Your Club</h1>
+    <p class="auth-motto">Your local sports community</p>
+    <p class="auth-subtitle">Player login</p>
+  `;
+
+  if (authStage === 'start') {
+    if (!window._loginMethod) window._loginMethod = 'email';
+    const method = window._loginMethod;
+    el.innerHTML = `
+      <div class="auth-panel">
+        ${header}
+        <div class="auth-card">
+          <button class="google-btn" id="google-btn"><span>Continue with Google</span><span class="g-icon">G</span></button>
+          <div class="auth-divider"><span>or</span></div>
+          <div class="method-toggle">
+            <button class="method-btn ${method==='email'?'active':''}" id="method-email-btn">Email</button>
+            <button class="method-btn ${method==='phone'?'active':''}" id="method-phone-btn">Phone</button>
+          </div>
+          ${method==='email' ? `
+            <label class="auth-label">Full name</label>
+            <input id="name-input" type="text" placeholder="Full name">
+            <label class="auth-label" style="margin-top:14px;">Email</label>
+            <input id="email-input" type="email" placeholder="you@example.com">
+            <label class="auth-label" style="margin-top:14px;">Password</label>
+            <input id="password-input" type="password" placeholder="••••••••">
+            <p class="pay-error" id="email-error">Please fill in name, email and password</p>
+            <button class="run-btn" id="email-login-btn" style="width:100%;margin-top:10px;">Log in</button>
+          ` : `
+            <label class="auth-label">Full name</label>
+            <input id="name-input" type="text" placeholder="Full name">
+            <label class="auth-label" style="margin-top:14px;">Phone number</label>
+            <input id="phone-input" type="tel" placeholder="050-1234567">
+            <label class="auth-label" style="margin-top:14px;">Referral code (optional)</label>
+            <input id="referral-input" type="text" placeholder="Referral code">
+            <p class="pay-error" id="phone-error">Please fill in a name and a valid phone number</p>
+            <button class="run-btn" id="send-otp-btn" style="width:100%;margin-top:10px;">Send code</button>
+            <div class="demo-phones">For demo purposes only - 4 existing numbers:<br>
+              0501111111 · 0502222222 · 0503333333 · 0504444444<br>
+              Any other number creates a new player without a subscription.</div>
+          `}
+        </div>
+        <p class="auth-footer">A new account is created automatically on first login - no separate sign-up needed</p>
+      </div>`;
+    document.getElementById('google-btn').addEventListener('click', ()=>{ authStage='google'; renderAuthPanel(); });
+    document.getElementById('method-email-btn').addEventListener('click', ()=>{ window._loginMethod='email'; renderAuthPanel(); });
+    document.getElementById('method-phone-btn').addEventListener('click', ()=>{ window._loginMethod='phone'; renderAuthPanel(); });
+
+    if (method==='email') {
+      document.getElementById('email-login-btn').addEventListener('click', ()=>{
+        const name = document.getElementById('name-input').value.trim();
+        const email = document.getElementById('email-input').value.trim();
+        const pw = document.getElementById('password-input').value;
+        const errEl = document.getElementById('email-error');
+        if (!name || !email.includes('@') || pw.length < 1) { errEl.classList.add('show'); return; }
+        errEl.classList.remove('show');
+        completeLogin('email:' + email.toLowerCase(), { email, name, authProvider: 'email' });
+      });
+    } else {
+      document.getElementById('send-otp-btn').addEventListener('click', ()=>{
+        const name = document.getElementById('name-input').value.trim();
+        const val = document.getElementById('phone-input').value.replace(/\D/g,'');
+        const errEl = document.getElementById('phone-error');
+        if (!name || val.length < 9) { errEl.classList.add('show'); return; }
+        errEl.classList.remove('show');
+        window._pendingName = name;
+        window._pendingPhone = val;
+        window._pendingReferral = document.getElementById('referral-input').value.trim().toUpperCase();
+        authStage = 'otp';
+        renderAuthPanel();
+      });
+    }
+
+  } else if (authStage === 'google') {
+    el.innerHTML = `
+      <div class="auth-panel">
+        ${header}
+        <div class="auth-card">
+          <p class="hint" style="margin-bottom:16px;">This screen simulates the Google account picker (no real OAuth connection in this demo).</p>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${DEMO_GOOGLE_ACCOUNTS.map(a=>`
+              <button class="action-btn secondary" style="width:100%;justify-content:flex-start;text-align:left;" onclick="loginWithGoogle('${a.email}','${a.name}')">${a.name} · ${a.email}</button>
+            `).join('')}
+          </div>
+          <div style="height:14px;"></div>
+          <input id="google-name-input" type="text" placeholder="Full name (for a new account)" style="margin-bottom:10px;">
+          <input id="google-email-input" type="email" placeholder="Or enter a different email">
+          <button class="run-btn" id="google-email-btn" style="width:100%;">Continue</button>
+        </div>
+        <button class="logout-link" style="margin-top:14px;" onclick="authStage='start'; renderAuthPanel();">Back</button>
+      </div>`;
+    document.getElementById('google-email-btn').addEventListener('click', ()=>{
+      const email = document.getElementById('google-email-input').value.trim();
+      const name = document.getElementById('google-name-input').value.trim();
+      if (!email.includes('@')) return;
+      loginWithGoogle(email, name || 'New Player');
+    });
+
+  } else if (authStage === 'otp') {
+    el.innerHTML = `
+      <div class="auth-panel">
+        ${header}
+        <div class="auth-card">
+          <p class="hint">A code was sent to ${window._pendingPhone} (in this demo the code is always <b style="color:var(--floodlight)">1234</b>)</p>
+          <input id="otp-input" type="tel" placeholder="1234" maxlength="4">
+          <p class="pay-error" id="otp-error">Incorrect code - in this demo the code is always 1234</p>
+          <button class="run-btn" id="verify-otp-btn" style="width:100%;">Verify</button>
+        </div>
+      </div>`;
+    document.getElementById('verify-otp-btn').addEventListener('click', async ()=>{
+      const code = document.getElementById('otp-input').value.trim();
+      const errEl = document.getElementById('otp-error');
+      if (code !== '1234') { errEl.classList.add('show'); return; }
+      errEl.classList.remove('show');
+      await completeLogin('phone:' + window._pendingPhone, { phone: window._pendingPhone, name: window._pendingName, authProvider: 'phone' });
+    });
+  }
+}
+
+async function loginWithGoogle(email, name){
+  await completeLogin('google:' + email, { email, name, authProvider: 'google' });
+}
+
+async function completeLogin(authId, fields){
+  let match = state.users.find(u=>u.authId===authId)
+    || (fields.phone && state.users.find(u=>u.phone===fields.phone && !u.authId))
+    || (fields.email && state.users.find(u=>u.email===fields.email && !u.authId));
+  if (!match) {
+    const ps = getPeriodStartISO(Date.now());
+    const refCode = window._pendingReferral || null;
+    const referrer = refCode ? state.users.find(u=>u.referralCode===refCode) : null;
+    const ref = await db.collection('users').add({
+      name: fields.name || 'New Player', phone: fields.phone || null, email: fields.email || null,
+      authId, authProvider: fields.authProvider,
+      hasSubscription: false, planName: 'Pay per game',
+      creditsAllotted: 0, creditsUsed: 0, periodStart: ps,
+      bonusXp: referrer ? 50 : 0, referralCode: generateReferralCode(fields.phone || fields.email || authId),
+      referralCount: 0, referredBy: referrer ? refCode : null
+    });
+    currentUserId = ref.id;
+    if (referrer) {
+      await db.collection('users').doc(referrer.id).update({
+        referralCount: (referrer.referralCount||0) + 1,
+        bonusXp: (referrer.bonusXp||0) + XP_PER_REFERRAL
+      });
+    }
+  } else {
+    currentUserId = match.id;
+    await ensureUserDefaults(match);
+    if (fields.name && (!match.name || match.name === 'New Player')) {
+      await db.collection('users').doc(match.id).update({ name: fields.name });
+    }
+  }
+  myAuthId = authId;
+  authStage = 'start';
+  localStorage.setItem('ts_demo_authid', authId);
+  render();
+
+  if (window._pendingRegisterGameId) {
+    const gameId = window._pendingRegisterGameId;
+    window._pendingRegisterGameId = null;
+    setTimeout(()=>handleRegisterClick(gameId), 200);
+  }
+}
+
+function registerFromHome(gameId){
+  if (!myAuthId) {
+    window._pendingRegisterGameId = gameId;
+    goToRole('player');
+    return;
+  }
+  goToRole('player');
+  handleRegisterClick(gameId);
+}
+
+async function purchasePlan(planKey, paymentToken){
+  const def = PLAN_DEFS[planKey];
+  if (!def || !currentUserId) return;
+  const ps = getPeriodStartISO(Date.now());
+  const renewsAt = new Date(Date.now() + 30*24*3600000).toISOString();
+  await db.collection('users').doc(currentUserId).update({
+    hasSubscription: true, planName: def.name, planKey: def.key, creditsAllotted: def.creditsAllotted,
+    creditsUsed: 0, periodStart: ps, paymentToken: paymentToken || null,
+    renewsAt, cancelPending: false
+  });
+}
+
+let cancelConfirmOpen = false;
+
+async function requestCancelSubscription(){
+  cancelConfirmOpen = true;
+  render();
+}
+
+async function confirmCancelYes(){
+  cancelConfirmOpen = false;
+  await db.collection('users').doc(currentUserId).update({ cancelPending: true });
+}
+
+function confirmCancelNo(){
+  cancelConfirmOpen = false;
+  render();
+}
+
+async function undoCancelSubscription(){
+  await db.collection('users').doc(currentUserId).update({ cancelPending: false });
+}
+
+async function finalizeIfRenewalPassed(user){
+  if (user.hasSubscription && user.cancelPending && user.renewsAt && Date.now() >= new Date(user.renewsAt).getTime()) {
+    await db.collection('users').doc(user.id).update({
+      hasSubscription: false, planName: 'Pay per game', creditsAllotted: 0, creditsUsed: 0,
+      cancelPending: false, paymentToken: null
+    });
+  }
+}
+
+function renderStoreCategories(){
+  const el = document.getElementById('store-categories');
+  if (!el) return;
+  el.innerHTML = STORE_CATEGORIES.map(c=>`
+    <div class="chip ${storeFilter.category===c.key?'active':''}" onclick="setStoreCategory('${c.key}')">${c.label}</div>
+  `).join('');
+}
+function setStoreCategory(key){ storeFilter.category = key; renderStoreCategories(); renderStoreProducts(); }
+
+function renderStoreProducts(){
+  const el = document.getElementById('store-products');
+  if (!el) return;
+  let items = STORE_PRODUCTS.filter(p=>
+    (storeFilter.category==='all' || p.category===storeFilter.category) &&
+    p.name.includes(storeFilter.search)
+  );
+  if (storeFilter.sort==='price-asc') items = [...items].sort((a,b)=>a.price-b.price);
+  if (storeFilter.sort==='price-desc') items = [...items].sort((a,b)=>b.price-a.price);
+
+  if (!items.length) { el.innerHTML = '<p class="empty-note">No products found</p>'; return; }
+
+  el.innerHTML = items.map((p,i)=>`
+    <div class="product-card">
+      <div class="product-media" style="background:${p.grad};">
+        <button class="wishlist-btn" onclick="this.classList.toggle('active')">♥</button>
+        ${i===0 ? '<span class="product-badge">Best seller</span>' : ''}
+        <span class="product-emoji">${p.icon}</span>
+      </div>
+      <div class="product-body">
+        <p class="product-name">${p.name}</p>
+        <p class="product-price">$${p.price} <span class="product-price-alt">or ${p.coinsPrice} coins</span></p>
+        ${p.sizes ? `<select id="size-${p.id}"><option value="" disabled selected>Size</option>${p.sizes.map(s=>`<option value="${s}">Size ${s}</option>`).join('')}</select>
+        <p class="pay-error" id="size-error-${p.id}">Please select a size</p>` : ''}
+        <button class="run-btn" style="width:100%;padding:9px;" onclick="addToCart('${p.id}')">Add to cart</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addToCart(productId){
+  const p = STORE_PRODUCTS.find(x=>x.id===productId);
+  if (!p) return;
+  const size = p.sizes ? document.getElementById('size-'+productId).value : null;
+  if (p.sizes && !size) {
+    document.getElementById('size-error-'+productId).classList.add('show');
+    return;
+  }
+  if (p.sizes) document.getElementById('size-error-'+productId).classList.remove('show');
+  const existing = cart.find(c=>c.productId===productId && c.size===size);
+  if (existing) existing.qty += 1;
+  else cart.push({ productId, name:p.name, price:p.price, coinsPrice:p.coinsPrice, size, qty:1 });
+  renderCart();
+}
+
+function removeFromCart(idx){
+  cart.splice(idx,1);
+  renderCart();
+}
+
+function renderCart(){
+  const el = document.getElementById('store-cart-panel');
+  if (!el) return;
+  if (!cart.length) { el.innerHTML = '<p class="empty-note">Your cart is empty</p>'; return; }
+  const total = cart.reduce((sum,c)=>sum+c.price*c.qty,0);
+  const coinsTotal = cart.reduce((sum,c)=>sum+c.coinsPrice*c.qty,0);
+  const user = state.users.find(u=>u.id===currentUserId);
+  const myCoins = user ? getTotalCoins(user) : 0;
+  const canRedeem = user && myCoins >= coinsTotal;
+
+  el.innerHTML = cart.map((c,i)=>`
+    <div class="cart-row">
+      <span style="flex:1;">${c.name}${c.size?' · size '+c.size:''} × ${c.qty}</span>
+      <span>$${c.price*c.qty}</span>
+      <button class="cart-remove" onclick="removeFromCart(${i})">Remove</button>
+    </div>
+  `).join('') + `
+    <div class="cart-total-row"><span>Total</span><span>$${total}</span></div>
+    <p class="xp-note-lg" style="margin-top:2px;">or ${coinsTotal} coins</p>
+    <button class="run-btn" style="width:100%;margin-top:14px;" onclick="openStoreCheckout()">Pay with money</button>
+    ${user
+      ? `<button class="action-btn secondary" style="width:100%;margin-top:10px;" ${canRedeem?'':'disabled'} onclick="redeemWithPoints()">Redeem for ${coinsTotal} coins (you have ${myCoins})</button>`
+      : `<p class="xp-note-lg">Log in to pay with coins you’ve earned from games</p>`
+    }
+  `;
+}
+
+async function redeemWithPoints(){
+  const user = state.users.find(u=>u.id===currentUserId);
+  if (!user) return;
+  const coinsTotal = cart.reduce((sum,c)=>sum+c.coinsPrice*c.qty,0);
+  if (getTotalCoins(user) < coinsTotal) return;
+
+  await db.collection('orders').add({
+    name: user.name, phone: user.phone || user.email || '', address: 'Pickup at the field',
+    items: cart, total: 0, paymentMethod: 'points', pointsSpent: coinsTotal,
+    createdAt: new Date().toISOString(), status: 'new'
+  });
+  await db.collection('users').doc(user.id).update({ coinsSpent: (user.coinsSpent||0) + coinsTotal });
+  cart = [];
+  renderCart();
+}
+
+function openStoreCheckout(){
+  renderStoreCheckoutForm('card');
+  document.getElementById('checkout-overlay').classList.add('open');
+}
+
+function renderStoreCheckoutForm(method){
+  const total = cart.reduce((sum,c)=>sum+c.price*c.qty,0);
+  const methodBtn = (key,label) => `<button class="action-btn ${method===key?'':'secondary'}" style="flex:1;" onclick="renderStoreCheckoutForm('${key}')">${label}</button>`;
+  document.getElementById('checkout-box').innerHTML = `
+    <div class="modal-head">
+      <p class="modal-title">Payment - shop order</p>
+      <button class="modal-close" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="pay-summary"><span class="ps-name">${cart.length} items</span><span class="ps-price">$${total}</span></div>
+    <div class="pay-field"><label>Full name</label><input id="store-name" placeholder="Full name"></div>
+    <div class="pay-field"><label>Phone</label><input id="store-phone" type="tel" placeholder="050-1234567"></div>
+    <div class="pay-field"><label>Shipping address</label><input id="store-address" placeholder="Street, number, city"></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      ${methodBtn('card','Credit card')}
+      ${methodBtn('bit','Bit')}
+      ${methodBtn('applepay','Apple Pay')}
+      ${methodBtn('googlepay','Google Pay')}
+    </div>
+    ${method==='card' ? `
+      <div class="pay-field"><label>Card number</label><input id="pay-number" placeholder="4580 1234 5678 9010" maxlength="19"></div>
+      <div class="pay-row">
+        <div class="pay-field"><label>Expires</label><input id="pay-exp" placeholder="MM/YY" maxlength="5"></div>
+        <div class="pay-field"><label>CVV</label><input id="pay-cvv" placeholder="123" maxlength="4"></div>
+      </div>
+    ` : `
+      <p class="pay-note" style="margin-top:-6px;">${
+        method==='bit' ? 'A payment confirmation will be sent to your Bit app.' :
+        method==='applepay' ? "Your device’s Apple Pay confirmation will appear." :
+        "Your device’s Google Pay confirmation will appear."
+      }</p>
+    `}
+    <p class="pay-error" id="pay-error">Check the details - something’s missing or invalid.</p>
+    <button class="run-btn" id="pay-submit-btn" onclick="submitStoreCheckout('${method}')">Pay $${total}</button>
+  `;
+}
+
+async function submitStoreCheckout(method){
+  const name = document.getElementById('store-name').value.trim();
+  const phone = document.getElementById('store-phone').value.trim();
+  const address = document.getElementById('store-address').value.trim();
+  const errEl = document.getElementById('pay-error');
+
+  if (!name || !phone || !address) { errEl.classList.add('show'); return; }
+  if (method === 'card') {
+    const number = document.getElementById('pay-number').value.replace(/\D/g,'');
+    const exp = document.getElementById('pay-exp').value.trim();
+    const cvv = document.getElementById('pay-cvv').value.trim();
+    if (number.length < 12 || !/^\d{2}\/\d{2}$/.test(exp) || cvv.length < 3) {
+      errEl.classList.add('show');
+      return;
+    }
+  }
+  errEl.classList.remove('show');
+
+  const btn = document.getElementById('pay-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Processing payment...';
+  await new Promise(r=>setTimeout(r, 900));
+  const total = cart.reduce((sum,c)=>sum+c.price*c.qty,0);
+  await db.collection('orders').add({
+    name, phone, address, items: cart, total, paymentMethod: method,
+    createdAt: new Date().toISOString(), status: 'new',
+    paymentToken: 'sim_' + method + '_' + Math.random().toString(36).slice(2,10)
+  });
+  cart = [];
+  closeCheckout();
+  renderCart();
+}
+
+function openCheckout(planKey){
+  renderSubscriptionCheckoutForm(planKey, 'card');
+  document.getElementById('checkout-overlay').classList.add('open');
+}
+
+function renderSubscriptionCheckoutForm(planKey, method){
+  const def = PLAN_DEFS[planKey];
+  if (!def) return;
+  const methodBtn = (key,label) => `<button class="action-btn ${method===key?'':'secondary'}" style="flex:1;" onclick="renderSubscriptionCheckoutForm('${planKey}','${key}')">${label}</button>`;
+  document.getElementById('checkout-box').innerHTML = `
+    <div class="modal-head">
+      <p class="modal-title">Subscription recurring payment</p>
+      <button class="modal-close" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="pay-summary"><span class="ps-name">${def.name}</span><span class="ps-price">${def.price}</span></div>
+    <p class="pay-note">This is a monthly recurring charge, not a one-time payment - the method you choose will be billed automatically every month until cancelled. This screen simulates a real payment iframe - details aren’t saved and there’s no real charge. In production, payment details never pass through your server at all, only a token for recurring billing.</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      ${methodBtn('card','Credit card')}
+      ${methodBtn('bit','Bit')}
+      ${methodBtn('applepay','Apple Pay')}
+      ${methodBtn('googlepay','Google Pay')}
+    </div>
+    ${method==='card' ? `
+      <div class="pay-field"><label>Cardholder name</label><input id="pay-name" placeholder="Jane Smith"></div>
+      <div class="pay-field"><label>Card number</label><input id="pay-number" placeholder="4580 1234 5678 9010" maxlength="19"></div>
+      <div class="pay-row">
+        <div class="pay-field"><label>Expires</label><input id="pay-exp" placeholder="MM/YY" maxlength="5"></div>
+        <div class="pay-field"><label>CVV</label><input id="pay-cvv" placeholder="123" maxlength="4"></div>
+      </div>
+      <p class="pay-note" style="margin-top:-4px;">The card will be saved for automatic monthly billing, not just this charge.</p>
+    ` : `
+      <p class="pay-note" style="margin-top:-6px;">${
+        method==='bit' ? 'Confirm a recurring monthly authorization in your Bit app.' :
+        method==='applepay' ? 'Your Apple Pay confirmation will also set up recurring monthly billing.' :
+        'Your Google Pay confirmation will also set up recurring monthly billing.'
+      }</p>
+    `}
+    <p class="pay-error" id="pay-error">Check the details - something’s missing or invalid.</p>
+    <button class="run-btn" id="pay-submit-btn" onclick="submitCheckout('${planKey}','${method}')">Confirm recurring payment - ${def.price}</button>
+  `;
+}
+
+function closeCheckout(){
+  document.getElementById('checkout-overlay').classList.remove('open');
+}
+
+async function submitCheckout(planKey, method){
+  const errEl = document.getElementById('pay-error');
+  if (method === 'card') {
+    const name = document.getElementById('pay-name').value.trim();
+    const number = document.getElementById('pay-number').value.replace(/\D/g,'');
+    const exp = document.getElementById('pay-exp').value.trim();
+    const cvv = document.getElementById('pay-cvv').value.trim();
+    if (!name || number.length < 12 || !/^\d{2}\/\d{2}$/.test(exp) || cvv.length < 3) {
+      errEl.classList.add('show');
+      return;
+    }
+  }
+  errEl.classList.remove('show');
+
+  const btn = document.getElementById('pay-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Processing payment...';
+
+  await new Promise(r=>setTimeout(r, 900));
+  const fakeToken = 'sim_' + method + '_' + Math.random().toString(36).slice(2,10);
+  await purchasePlan(planKey, fakeToken);
+  closeCheckout();
+}
+
+function hashString(str){
+  let h = 0;
+  for (let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
+  return h;
+}
+function seededRange(seed, min, max){
+  const x = Math.sin(seed) * 10000;
+  const frac = x - Math.floor(x);
+  return Math.floor(min + frac*(max-min));
+}
+function getPlayerStats(name){
+  const override = state.playerStats && state.playerStats.find(p=>p.name===name);
+  if (override) {
+    return {
+      games: override.games||0, appearances: override.appearances||0,
+      wins: override.wins||0, points: override.points||0, teamOfRound: override.teamOfRound||0,
+      isReal: true, isOverride: true
+    };
+  }
+  const full = REAL_PLAYER_DETAILS[name];
+  if (full) {
+    const h = hashString(name);
+    return {
+      games: full.wins + seededRange(h+4, 20, 150), appearances: seededRange(h+5, 100, 500),
+      points: full.points, wins: full.wins, teamOfRound: full.teamOfRound, isReal: true, isFull: true
+    };
+  }
+  const pointsOnly = REAL_POINTS_LEADERBOARD.find(p=>p.name===name);
+  const h = hashString(name);
+  if (pointsOnly) {
+    const wins = seededRange(h+2, 50, 900);
+    return {
+      points: pointsOnly.points, wins,
+      games: wins + seededRange(h+4, 20, 200),
+      appearances: seededRange(h+5, 30, 400),
+      teamOfRound: seededRange(h+3, 10, 100),
+      isReal: true, isFull: false
+    };
+  }
+  const wins = seededRange(h+2, 1, 70);
+  return {
+    points: seededRange(h, 0, 60),
+    wins,
+    games: wins + seededRange(h+4, 5, 40),
+    appearances: seededRange(h+5, 3, 60),
+    teamOfRound: seededRange(h+3, 0, 20),
+    isReal: false
+  };
+}
+
+function openPlayerStats(name){
+  const stats = getPlayerStats(name);
+  document.getElementById('player-modal-box').innerHTML = `
+    <div class="modal-head">
+      <p class="modal-title">${name}</p>
+      <button class="modal-close" onclick="closePlayerStats()">✕</button>
+    </div>
+    <p class="pay-note">${stats.isOverride ? 'Based on data entered manually by staff' : stats.isFull ? 'Points, wins and Top Performer are real · games and appearances not yet entered manually so they are estimated' : stats.isReal ? 'Points are real, other data is estimated for the demo' : 'No real data for this player yet - numbers are estimated for the demo only'}</p>
+    <div class="stat-tile-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-tile"><span class="st-val">${stats.games}</span><span class="st-label">Games</span></div>
+      <div class="stat-tile"><span class="st-val">${stats.appearances}</span><span class="st-label">Appearances</span></div>
+      <div class="stat-tile"><span class="st-val">${stats.wins}</span><span class="st-label">Wins</span></div>
+      <div class="stat-tile"><span class="st-val">${stats.points}</span><span class="st-label">Points</span></div>
+      <div class="stat-tile"><span class="st-val">${stats.teamOfRound}</span><span class="st-label">Top Performer</span></div>
+    </div>
+  `;
+  document.getElementById('player-modal-overlay').classList.add('open');
+}
+function closePlayerStats(){
+  document.getElementById('player-modal-overlay').classList.remove('open');
+}
+function openGameModal(gameId){
+  openGameId = gameId;
+  renderGameModal();
+  document.getElementById('game-modal-overlay').classList.add('open');
+}
+function closeGameModal(){
+  openGameId = null;
+  document.getElementById('game-modal-overlay').classList.remove('open');
+}
+function renderGameModal(){
+  const box = document.getElementById('game-modal-box');
+  const game = state.games.find(g=>g.id===openGameId);
+  if (!game) { box.innerHTML=''; return; }
+  const when = fmtDateTime(game.startsAt);
+  const roster = state.registrations.filter(r=>r.gameId===game.id && r.status==='confirmed');
+  const myReg = roster.find(r=>r.userId===currentUserId);
+  const full = game.capacityUsed >= game.capacityTotal;
+  const started = new Date(game.startsAt).getTime() <= Date.now();
+  const rows = roster.length
+    ? roster.map(r=>`<div class="roster-row" style="cursor:pointer;" onclick="openPlayerStats('${r.userName.replace(/'/g,"\\'")}')"><span>${r.userName}</span><span class="roster-tag">Stats ›</span></div>`).join('')
+    : '<p class="empty-note">No one has registered yet</p>';
+  const showPlayerAction = document.getElementById('view-player').classList.contains('active') && currentUserId;
+  box.innerHTML = `
+    <div class="modal-head">
+      <div><p class="modal-title">${game.title}</p><p class="modal-meta">${when.d} · ${when.t} · ${game.location}</p></div>
+      <button class="modal-close" onclick="closeGameModal()">✕</button>
+    </div>
+    <p class="roster-count">${game.capacityUsed} / ${game.capacityTotal} registered</p>
+    ${rows}
+    ${showPlayerAction ? `<div style="margin-top:16px;">
+      ${myReg
+        ? `<button class="action-btn secondary" style="width:100%;" onclick="cancelRegistration('${myReg.id}'); closeGameModal();">Cancel registration</button>`
+        : `<button class="action-btn" style="width:100%;" ${(full||started)?'disabled':''} onclick="closeGameModal(); handleRegisterClick('${game.id}');">${started?'Game already started':full?'Game full':'Register'}</button>`}
+    </div>` : ''}
+  `;
+}
+
+function logout(){
+  myAuthId = null;
+  currentUserId = null;
+  authStage = 'start';
+  localStorage.removeItem('ts_demo_authid');
+  render();
+}
+
+async function ensureUserPeriod(user){
+  const currentPs = getPeriodStartISO(Date.now());
+  if (user.periodStart !== currentPs) {
+    await db.collection('users').doc(user.id).update({ periodStart: currentPs, creditsUsed: 0 });
+    user.periodStart = currentPs; user.creditsUsed = 0;
+  }
+  return user;
+}
+
+async function handleRegisterClick(gameId){
+  const user = state.users.find(u=>u.id===currentUserId);
+  if (!user) return;
+  await ensureUserPeriod(user);
+  const hasCredit = user.hasSubscription && user.creditsUsed < user.creditsAllotted;
+  if (hasCredit) {
+    await completeRegistration(gameId, 'included', null);
+  } else {
+    openSingleCheckout(gameId);
+  }
+}
+
+async function completeRegistration(gameId, chargeType, paymentToken){
+  const user = state.users.find(u=>u.id===currentUserId);
+  const game = state.games.find(g=>g.id===gameId);
+  if (!user || !game) return;
+  await db.collection('registrations').add({
+    gameId: game.id, gameTitle: game.title, userId: user.id, userName: user.name,
+    chargeType, status: 'confirmed', createdAt: new Date().toISOString(),
+    gameStartsAt: game.startsAt, paymentToken: paymentToken || null
+  });
+  await db.collection('games').doc(game.id).update({ capacityUsed: (game.capacityUsed||0) + 1 });
+  if (chargeType === 'included') {
+    await db.collection('users').doc(user.id).update({ creditsUsed: user.creditsUsed + 1 });
+  }
+}
+
+function openSingleCheckout(gameId){
+  const game = state.games.find(g=>g.id===gameId);
+  if (!game) return;
+  renderSingleCheckoutForm(gameId, 'card');
+  document.getElementById('checkout-overlay').classList.add('open');
+}
+
+function renderSingleCheckoutForm(gameId, method){
+  const game = state.games.find(g=>g.id===gameId);
+  if (!game) return;
+  const methodBtn = (key,label) => `<button class="action-btn ${method===key?'':'secondary'}" style="flex:1;" onclick="renderSingleCheckoutForm('${gameId}','${key}')">${label}</button>`;
+  document.getElementById('checkout-box').innerHTML = `
+    <div class="modal-head">
+      <p class="modal-title">Game payment</p>
+      <button class="modal-close" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="pay-summary"><span class="ps-name">${game.title}</span><span class="ps-price">$${SINGLE_GAME_PRICE}</span></div>
+    <p class="pay-note">Single game, no subscription. This screen simulates a real payment - no actual charge.</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      ${methodBtn('card','Credit card')}
+      ${methodBtn('bit','Bit')}
+      ${methodBtn('applepay','Apple Pay')}
+    </div>
+    ${method==='card' ? `
+      <div class="pay-field"><label>Cardholder name</label><input id="pay-name" placeholder="Jane Smith"></div>
+      <div class="pay-field"><label>Card number</label><input id="pay-number" placeholder="4580 1234 5678 9010" maxlength="19"></div>
+      <div class="pay-row">
+        <div class="pay-field"><label>Expires</label><input id="pay-exp" placeholder="MM/YY" maxlength="5"></div>
+        <div class="pay-field"><label>CVV</label><input id="pay-cvv" placeholder="123" maxlength="4"></div>
+      </div>
+      <p class="pay-error" id="pay-error">Check the card details - something’s missing or invalid.</p>
+      <button class="run-btn" id="pay-submit-btn" onclick="submitSingleCheckout('${gameId}','card')">Pay $${SINGLE_GAME_PRICE}</button>
+    ` : `
+      <p class="pay-note" style="margin-top:-6px;">${method==='bit'?'A payment confirmation will be sent to your Bit app.':'Your device\'s Apple Pay confirmation will appear.'}</p>
+      <button class="run-btn" id="pay-submit-btn" onclick="submitSingleCheckout('${gameId}','${method}')">Confirm payment $${SINGLE_GAME_PRICE}</button>
+    `}
+  `;
+}
+
+async function submitSingleCheckout(gameId, method){
+  const btn = document.getElementById('pay-submit-btn');
+  if (method === 'card') {
+    const name = document.getElementById('pay-name').value.trim();
+    const number = document.getElementById('pay-number').value.replace(/\D/g,'');
+    const exp = document.getElementById('pay-exp').value.trim();
+    const cvv = document.getElementById('pay-cvv').value.trim();
+    const errEl = document.getElementById('pay-error');
+    if (!name || number.length < 12 || !/^\d{2}\/\d{2}$/.test(exp) || cvv.length < 3) {
+      errEl.classList.add('show');
+      return;
+    }
+    errEl.classList.remove('show');
+  }
+  btn.disabled = true;
+  btn.textContent = 'Processing payment...';
+  await new Promise(r=>setTimeout(r, 900));
+  const fakeToken = 'sim_' + method + '_' + Math.random().toString(36).slice(2,10);
+  await completeRegistration(gameId, 'single', fakeToken);
+  closeCheckout();
+}
+
+async function cancelRegistration(regId){
+  const reg = state.registrations.find(r=>r.id===regId);
+  if (!reg) return;
+  const game = state.games.find(g=>g.id===reg.gameId);
+  const user = state.users.find(u=>u.id===reg.userId);
+  const late = game ? isPastCancelCutoff(game.startsAt) : true;
+  await db.collection('registrations').doc(reg.id).update({ status: late ? 'cancelled_late' : 'cancelled_ok' });
+  if (!late) {
+    if (game) await db.collection('games').doc(game.id).update({ capacityUsed: Math.max(0,(game.capacityUsed||0) - 1) });
+    if (reg.chargeType === 'included' && user) {
+      await db.collection('users').doc(user.id).update({ creditsUsed: Math.max(0, user.creditsUsed - 1) });
+    }
+  }
+}
+
+async function runAgentCheck(){
+  const threshold = Number(document.getElementById('threshold-input').value) / 100;
+  const lookaheadH = Number(document.getElementById('lookahead-input').value);
+  const now = Date.now();
+  let count = 0;
+  for (const g of state.games) {
+    const hoursAway = (new Date(g.startsAt).getTime() - now)/3600000;
+    if (hoursAway <= 0 || hoursAway > lookaheadH) continue;
+    const fillRate = g.capacityTotal>0 ? g.capacityUsed/g.capacityTotal : 1;
+    if (fillRate < threshold) {
+      const alreadyPending = state.agentProposals.some(p=>p.gameId===g.id && p.status==='pending');
+      if (alreadyPending) continue;
+
+      // Players already registered for this exact game - never message them, redundant and awkward
+      const alreadyRegisteredIds = new Set(
+        state.registrations.filter(r=>r.gameId===g.id && r.status==='confirmed').map(r=>r.userId)
+      );
+
+      // Build a frequency map: how many times each player has registered for games of this format (excluding this game)
+      const freq = {};
+      for (const r of state.registrations) {
+        if (r.status==='cancelled_ok') continue;
+        if (alreadyRegisteredIds.has(r.userId)) continue;
+        const rGame = state.games.find(gg=>gg.id===r.gameId);
+        if (!rGame || rGame.format !== g.format || rGame.id === g.id) continue;
+        if (!freq[r.userId]) freq[r.userId] = { userId: r.userId, name: r.userName, count: 0 };
+        freq[r.userId].count++;
+      }
+
+      // Scoring: past frequency + bonus for active subscribers (regulars, more likely to attend)
+      const candidates = Object.values(freq).map(c=>{
+        const user = state.users.find(u=>u.id===c.userId);
+        const isSubscriber = !!(user && user.hasSubscription);
+        const score = c.count * 10 + (isSubscriber ? 15 : 0);
+        return { userId: c.userId, name: c.name, pastCount: c.count, isSubscriber, score };
+      }).sort((a,b)=>b.score-a.score).slice(0, 15);
+
+      await db.collection('agentProposals').add({
+        gameId: g.id, gameTitle: g.title, gameLocation: g.location, gameStartsAt: g.startsAt, gameFormat: g.format,
+        fillRateAtTrigger: Math.round(fillRate*100), thresholdUsed: Math.round(threshold*100),
+        candidates, selectedIds: candidates.map(c=>c.userId),
+        messagePreview: `Hi [name], ${g.title} still has ${g.capacityTotal - g.capacityUsed} spots left. ${fmtDateTime(g.startsAt).d} · ${fmtDateTime(g.startsAt).t} · ${g.location}. Register: [link]`,
+        status: 'pending', createdAt: new Date().toISOString()
+      });
+      count++;
+    }
+  }
+  document.getElementById('agent-run-note').textContent = count>0
+    ? `The check found ${count} games below the threshold, and ranked a candidate list for each by registration history. No message is sent automatically - you need to select and approve below.`
+    : 'All games in range are above the threshold - no action needed.';
+}
+
+function toggleCandidateSelection(proposalId, userId){
+  const p = state.agentProposals.find(x=>x.id===proposalId);
+  if (!p) return;
+  const selected = new Set(p.selectedIds || []);
+  if (selected.has(userId)) selected.delete(userId); else selected.add(userId);
+  db.collection('agentProposals').doc(proposalId).update({ selectedIds: [...selected] });
+}
+
+async function approveProposal(proposalId){
+  const p = state.agentProposals.find(x=>x.id===proposalId);
+  if (!p) return;
+  const selectedIds = p.selectedIds || [];
+  const selectedNames = (p.candidates||[]).filter(c=>selectedIds.includes(c.userId)).map(c=>c.name);
+  await db.collection('agentLog').add({
+    gameId: p.gameId, gameTitle: p.gameTitle, triggeredAt: new Date().toISOString(),
+    fillRateAtTrigger: p.fillRateAtTrigger, thresholdUsed: p.thresholdUsed,
+    note: `Approved by admin · a simulated WhatsApp message was sent to ${selectedIds.length} selected players: ${selectedNames.slice(0,5).join(', ')}${selectedNames.length>5?' and more...':''} (a real integration requires a WhatsApp Business account)`
+  });
+  await db.collection('agentProposals').doc(proposalId).update({ status: 'approved' });
+}
+
+async function rejectProposal(proposalId){
+  await db.collection('agentProposals').doc(proposalId).update({ status: 'rejected' });
+}
+
+async function addGame(){
+  const title = document.getElementById('ng-title').value.trim();
+  const format = document.getElementById('ng-format').value;
+  const location = document.getElementById('ng-location').value.trim();
+  const datetimeVal = document.getElementById('ng-datetime').value;
+  const capacity = Number(document.getElementById('ng-capacity').value);
+  if (!title || !location || !datetimeVal || !capacity) return;
+  await db.collection('games').add({
+    title, format, location, startsAt: new Date(datetimeVal).toISOString(),
+    capacityTotal: capacity, capacityUsed: 0
+  });
+  document.getElementById('ng-title').value='';
+  document.getElementById('ng-location').value='';
+  document.getElementById('ng-datetime').value='';
+  document.getElementById('ng-capacity').value='';
+}
+
+function render(){
+  renderAuthPanel();
+  renderIdentityBar();
+  renderAdminAuth();
+  renderPlanPanel();
+  renderProgressPanel();
+  renderGamesPanel();
+  renderMyRegs();
+  renderLeaderboard();
+  renderAdminGames();
+  renderAdminUsers();
+  renderAdminLeads();
+  renderAdminAmbassadors();
+  renderPlayerStatsList();
+  renderCrmTable();
+  renderAdminOrders();
+  renderAgentLog();
+  renderAgentProposals();
+  renderAnalytics();
+  renderStoreProducts();
+  renderHomeTeaser();
+  renderSubscribePage();
+  renderCart();
+  if (openGameId) renderGameModal();
+}
+
+function renderProgressPanel(){
+  const el = document.getElementById('progress-panel');
+  const user = state.users.find(u=>u.id===currentUserId);
+  if (!el || !user) { if(el) el.innerHTML=''; return; }
+  const totalXp = getTotalXP(user);
+  const info = getLevelInfo(totalXp);
+  const { pending } = computeGameXP(user.id);
+  const myCoins = getTotalCoins(user);
+  const gamesPlayed = state.registrations.filter(r=>r.userId===user.id && r.status!=='cancelled_ok').length;
+  const myAppearanceDates = new Set(
+    state.registrations.filter(r=>r.userId===user.id && r.status!=='cancelled_ok')
+      .map(r=>new Date(r.gameStartsAt).toDateString())
+  );
+  const cancelledOk = state.registrations.filter(r=>r.userId===user.id && r.status==='cancelled_ok').length;
+  const cancelledLate = state.registrations.filter(r=>r.userId===user.id && r.status==='cancelled_late').length;
+  const stats = getPlayerStats(user.name);
+  const link = 'yourclub.example.com/join?ref=' + (user.referralCode || '');
+  el.innerHTML = `
+    <div class="level-head">
+      <span class="level-badge">Level ${info.level}</span>
+      <span class="xp-count">${totalXp} XP · ${myCoins} shop coins</span>
+    </div>
+    <div class="xp-track-lg"><div class="xp-fill-lg" style="width:${info.pct}%;"></div></div>
+    <p class="xp-note-lg">${info.remaining} more XP to level ${info.level+1}</p>
+    ${pending > 0 ? `<p class="xp-note-lg" style="color:var(--floodlight);">+${pending} XP pending - confirmed if you don’t cancel by 10:00 AM on game day</p>` : ''}
+
+    <p class="terms-sub" style="margin-top:18px;">My stats</p>
+    <div class="stat-tile-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-tile"><span class="st-val">${gamesPlayed}</span><span class="st-label">Games</span></div>
+      <div class="stat-tile"><span class="st-val">${myAppearanceDates.size}</span><span class="st-label">Appearances</span></div>
+      <div class="stat-tile"><span class="st-val">${stats.wins}</span><span class="st-label">Wins</span></div>
+      <div class="stat-tile"><span class="st-val">${stats.points}</span><span class="st-label">Points</span></div>
+      <div class="stat-tile"><span class="st-val">${stats.teamOfRound}</span><span class="st-label">Top Performer</span></div>
+    </div>
+    <p class="pay-note" style="margin:8px 0 0;">Your games and appearances are counted automatically from in-app registration. ${stats.isFull ? 'Wins/points/Top Performer are based on real data.' : stats.isReal ? 'Points are real, the rest is estimated for the demo.' : 'Wins/points/Top Performer are still estimated for the demo.'} · ${cancelledOk} on-time cancellations · ${cancelledLate} late</p>
+
+    <div class="referral-box" style="margin-top:16px;">
+      <div><p style="margin:0 0 4px;font-size:12px;color:var(--chalk-dim);">Refer a friend - your code</p><span class="referral-code">${user.referralCode||''}</span></div>
+      <button class="referral-copy-btn" onclick="copyReferral('${link}')">Copy link</button>
+    </div>
+    <p class="xp-note-lg">${user.referralCount||0} friends joined through you · each join adds ${XP_PER_REFERRAL} XP</p>
+  `;
+}
+
+function copyReferral(link){
+  navigator.clipboard.writeText(link).catch(()=>{});
+  const btn = event.target;
+  const original = btn.textContent;
+  btn.textContent = 'Copied!';
+  setTimeout(()=>{ btn.textContent = original; }, 1500);
+}
+
+function renderLeaderboard(){
+  const el = document.getElementById('leaderboard-panel');
+  if (!el) return;
+  el.innerHTML = REAL_POINTS_LEADERBOARD.map((p,i)=>`
+    <div class="lb-row ${i===0?'top1':''}" style="cursor:pointer;" onclick="openPlayerStats('${p.name.replace(/'/g,"\\'")}')">
+      <span class="lb-rank">${i+1}</span>
+      <span class="lb-name">${p.name}</span>
+      <span class="lb-val">${p.points}</span>
+    </div>
+  `).join('') + `
+    <p class="lb-source">Most wins: Dan Cohen (1085) · Most Top Performer picks: Dan Cohen (110)</p>
+  `;
+}
+
+function renderIdentityBar(){
+  const el = document.getElementById('identity-bar');
+  const user = state.users.find(u=>u.id===currentUserId);
+  if (!el) return;
+  el.innerHTML = user
+    ? `<span>Logged in as <b>${user.name}</b> · ${(user.authProvider==='google'||user.authProvider==='email') ? '📧 '+user.email : '📱 '+user.phone}</span><button class="logout-link" onclick="logout()">Log out</button>`
+    : `<span>Loading profile...</span>`;
+}
+
+function renderPlanPanel(){
+  const user = state.users.find(u=>u.id===currentUserId);
+  const el = document.getElementById('plan-panel');
+  const subEl = document.getElementById('subscribe-panel');
+  if (!user) { el.innerHTML=''; subEl.style.display='none'; return; }
+
+  if (!user.hasSubscription) {
+    el.innerHTML = `<div class="plan-head"><span class="plan-name">No subscription</span></div>
+      <p class="credit-note">${user.name} is registered for pay-per-game - $${SINGLE_GAME_PRICE} per game.</p>`;
+    subEl.style.display = 'block';
+    subEl.innerHTML = `
+      <p class="panel-title">Subscribe to a plan</p>
+      <div class="plans-grid">
+        ${Object.values(PLAN_DEFS).map(p=>`
+          <div class="plan-card">
+            <div class="pc-head"><span class="pc-name">${p.name}</span><span class="pc-price">${p.price}</span></div>
+            <p class="pc-desc">${p.desc}</p>
+            <button class="run-btn" onclick="openCheckout('${p.key}')">Proceed to payment</button>
+          </div>`).join('')}
+      </div>`;
+    return;
+  }
+
+  subEl.style.display = 'none';
+  const unlimited = user.creditsAllotted >= 99;
+  const boxes = unlimited ? '' : Array.from({length:user.creditsAllotted}).map((_,i)=>
+    `<div class="credit-box ${i<user.creditsUsed?'used':''}">${i<user.creditsUsed?'✓':i+1}</div>`
+  ).join('');
+  const renewsDate = user.renewsAt ? new Date(user.renewsAt).toLocaleDateString('he-IL') : null;
+  el.innerHTML = `
+    <div class="plan-head"><span class="plan-name">${user.planName}</span></div>
+    ${unlimited ? `<p class="credit-note">${user.creditsUsed} games this month · unlimited</p>` : `
+      <div class="credit-row">${boxes}</div>
+      <p class="credit-note">${user.creditsAllotted - user.creditsUsed} spots left this month · doesn’t roll over</p>
+    `}
+    ${user.cancelPending
+      ? `<div class="pay-note" style="margin-top:14px;">The subscription won’t renew on ${renewsDate} and will switch to pay-per-game. Until then access stays active as usual.</div>
+         <button class="action-btn secondary" style="width:100%;" onclick="undoCancelSubscription()">Undo cancellation - stay subscribed</button>`
+      : cancelConfirmOpen
+        ? `<div class="pay-note" style="margin-top:14px;">Cancel the subscription renewal? You’ll keep access until ${renewsDate||'the end of the period'}, then it switches to pay-per-game.</div>
+           <div style="display:flex;gap:10px;margin-top:10px;">
+             <button class="action-btn secondary" style="flex:1;" onclick="confirmCancelYes()">Yes, cancel</button>
+             <button class="action-btn" style="flex:1;" onclick="confirmCancelNo()">Stay subscribed</button>
+           </div>`
+        : `${renewsDate ? `<p class="credit-note" style="margin-top:10px;">Renews automatically on ${renewsDate}</p>` : ''}
+           <button class="action-btn secondary" style="width:100%;margin-top:12px;" onclick="requestCancelSubscription()">Cancel subscription</button>`}
+  `;
+}
+
+function renderGamesPanel(){
+  const el = document.getElementById('games-panel');
+  const upcoming = state.games.filter(g => new Date(g.startsAt).getTime() > Date.now());
+  if (!upcoming.length) { el.innerHTML = '<p class="empty-note">No upcoming games</p>'; return; }
+  const myOpenRegs = state.registrations.filter(r=>r.userId===currentUserId && r.status==='confirmed');
+  el.innerHTML = upcoming.map(g=>{
+    const when = fmtDateTime(g.startsAt);
+    const fs = playerFillStatus(g.capacityUsed, g.capacityTotal);
+    const alreadyIn = myOpenRegs.some(r=>r.gameId===g.id);
+    const full = g.capacityUsed >= g.capacityTotal;
+    return `<div class="game-card">
+      <div class="game-when"><span class="d">${when.d}</span><span class="t">${when.t}</span></div>
+      <div class="game-info"><p class="g-title">${g.title}</p><p class="g-meta">${g.location} · <button class="fill-link" onclick="openGameModal('${g.id}')">${g.capacityUsed}/${g.capacityTotal} registered</button>${g.fillIsEstimated?' (estimated)':''}</p></div>
+      <span class="fill-pill ${fs.cls}">${fs.label}</span>
+      ${alreadyIn
+        ? `<button class="action-btn" disabled>Registered</button>`
+        : `<button class="action-btn" ${full?'disabled':''} onclick="handleRegisterClick('${g.id}')">${full?'Full':'Register'}</button>`}
+    </div>`;
+  }).join('');
+}
+
+function renderMyRegs(){
+  const el = document.getElementById('my-regs-panel');
+  const mine = state.registrations.filter(r=>r.userId===currentUserId).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  if (!mine.length) { el.innerHTML = '<p class="empty-note">No registrations yet</p>'; return; }
+  const labels = {confirmed:'Registered', cancelled_ok:'Cancelled', cancelled_late:'Cancelled late'};
+  el.innerHTML = mine.map(r=>`<div class="reg-row">
+    <span class="status-tag st-${r.status}">${labels[r.status]}</span>
+    <span style="flex:1;">${r.gameTitle} <span style="color:var(--chalk-dim);">· ${r.chargeType==='included'?'included in plan':'pay per game'}</span></span>
+    ${r.status==='confirmed' ? `<button class="action-btn secondary" onclick="cancelRegistration('${r.id}')">Cancel</button>` : ''}
+  </div>`).join('');
+}
+
+function renderAdminGames(){
+  const el = document.getElementById('admin-games-body');
+  el.innerHTML = state.games.map(g=>{
+    const when = fmtDateTime(g.startsAt);
+    const fs = fillStatus(g.capacityUsed, g.capacityTotal);
+    const pct = g.capacityTotal>0 ? Math.round(100*g.capacityUsed/g.capacityTotal) : 0;
+    return `<tr style="cursor:pointer;" onclick="openGameModal('${g.id}')">
+      <td><b>${g.title}</b><br><span style="color:var(--chalk-dim);font-size:11px;">${g.location}</span></td>
+      <td>${when.d} · ${when.t}</td>
+      <td><span class="fill-track"><span class="fill-fill" style="width:${pct}%;background:${fs.color};"></span></span>${g.capacityUsed}/${g.capacityTotal}</td>
+      <td><span class="fill-pill ${fs.cls}">${fs.label}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAdminUsers(){
+  const el = document.getElementById('admin-users-body');
+  el.innerHTML = state.users.map(u=>`<tr>
+    <td style="cursor:pointer;" onclick="openPlayerStats('${u.name.replace(/'/g,"\\'")}')">${u.name}</td>
+    <td>${u.planName}</td>
+    <td>${u.hasSubscription ? (u.creditsAllotted>=99 ? u.creditsUsed+' this month' : u.creditsUsed+'/'+u.creditsAllotted) : '-'}</td>
+  </tr>`).join('');
+}
+
+function renderAgentLog(){
+  const el = document.getElementById('agent-log-panel');
+  if (!state.agentLog.length) { el.innerHTML = '<p class="empty-note">No activity yet</p>'; return; }
+  el.innerHTML = state.agentLog.map(a=>{
+    const t = new Date(a.triggeredAt);
+    return `<div class="log-item">
+      <span class="lt">${t.toLocaleDateString('he-IL')} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}</span>
+      <p class="lm"><b style="color:var(--chalk);">${a.gameTitle}</b> · fill ${a.fillRateAtTrigger}% (threshold ${a.thresholdUsed}%)<br>${a.note}</p>
+    </div>`;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>
